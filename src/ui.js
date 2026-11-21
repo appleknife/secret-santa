@@ -99,7 +99,7 @@ function playSound(name) {
 }
 
 const HOVER_SELECTOR =
-  ".mascot-ring, .mascot, .bulb, .mug, .sparkle, .title-rule i, .rules span, .steps li, .corners svg, button";
+  ".mascot-ring, .mascot, .bulb, .mug, .sparkle, .title-rule i, .rules span, .steps li, .choice label, .corners svg, button";
 
 function soundFor(el) {
   if (el.matches(".mascot-ring, .mascot, .mug, .corners svg")) return "chime";
