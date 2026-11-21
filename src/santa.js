@@ -1,0 +1,118 @@
+/**
+ * The app's flows, independent of any page markup:
+ * start a group, join, load "my page", draw names, send and open gifts.
+ *
+ * Secrets: a person's private link carries their token (to sign in) and their
+ * private key (to open things sealed for them). Neither is ever uploaded.
+ */
+
+import { makeAssignments } from "./assign.js";
+import { newKeyPair, newToken, seal, open, privateFragment } from "./keys.js";
+
+export const CAP_USD = 20;
+
+async function identity() {
+  const { publicKey, privateKey } = await newKeyPair();
+  const token = newToken();
+  return { publicKey, privateKey, token, fragment: privateFragment(token, privateKey) };
+}
+
+export async function createGroup(db, { title, giftDay, name, wishlist, giftPref }) {
+  const id = await identity();
+  const res = await db.createEvent({ title, giftDay, name, wishlist, giftPref, publicKey: id.publicKey, token: id.token });
+  return { code: res.code, fragment: id.fragment };
+}
+
+export async function joinGroup(db, code, { name, wishlist, giftPref }) {
+  const id = await identity();
+  const res = await db.joinEvent({ code, name, wishlist, giftPref, publicKey: id.publicKey, token: id.token });
+  return { code: res.code, fragment: id.fragment };
+}
+
+/**
+ * Everything for one person's page, with their match and gifts already opened.
+ * @param {{token:string, privateKey:object}} secret  from parsePrivateFragment
+ */
+export async function loadMe(db, secret) {
+  const state = await db.myEvent(secret.token);
+  const byId = new Map(state.participants.map((p) => [p.id, p]));
+
+  let match = null;
+  if (state.assignment) {
+    try {
+      const data = JSON.parse(await open(state.assignment, secret.privateKey));
+      match = byId.get(data.receiver_id) || { id: data.receiver_id, name: data.receiver_name, wishlist: "", left: true };
+    } catch {
+      match = { error: "Your match couldn't be unlocked with this link. Are you using your newest private link?" };
+    }
+  }
+
+  const received = [];
+  for (const g of state.gifts_received) {
+    let gift = null;
+    if (g.sealed) {
+      try { gift = JSON.parse(await open(g.sealed, secret.privateKey)); }
+      catch { gift = { kind: "note", message: "(This gift couldn't be unlocked.)" }; }
+    }
+    received.push({ ...g, gift });
+  }
+
+  const sent = state.gifts_sent.map((g) => ({ ...g, recipient: byId.get(g.recipient_id) }));
+  return { ...state, match, received, sent };
+}
+
+/**
+ * Pair everyone and store each person's match sealed to their own key.
+ * The pairing exists only in this function's memory; nothing displays it and
+ * the database only ever receives the sealed envelopes.
+ */
+export async function drawNames(db, secret, rng = Math.random) {
+  const state = await db.myEvent(secret.token);
+  if (!state.me.is_owner) throw new Error("Only the person who started the group can draw names.");
+  const people = state.participants;
+  if (people.length < 3) throw new Error("You need at least 3 people to draw names.");
+  const byId = new Map(people.map((p) => [p.id, p]));
+  const pairs = makeAssignments(people.map((p) => p.id), [], rng);
+  const rows = [];
+  for (const [giverId, receiverId] of pairs) {
+    const receiver = byId.get(receiverId);
+    const payload = JSON.stringify({ receiver_id: receiverId, receiver_name: receiver.name });
+    rows.push({ giver_id: giverId, sealed: await seal(payload, byId.get(giverId).public_key) });
+  }
+  pairs.clear();
+  await db.submitDraw(secret.token, rows);
+}
+
+/** Clean up what a giver typed into a gift. Returns a plain object. */
+export function normalizeGift(input) {
+  const kind = ["giftcard", "art", "note"].includes(input.kind) ? input.kind : "note";
+  const trim = (v, n) => String(v || "").trim().slice(0, n);
+  const gift = { kind, message: trim(input.message, 1500) };
+  if (kind === "giftcard") {
+    gift.store = trim(input.store, 60);
+    gift.amount = trim(input.amount, 12).replace(/^\$/, "");
+    gift.code = trim(input.code, 300);
+    gift.link = trim(input.link, 500);
+    if (!gift.code && !gift.link) throw new Error("Add the gift card code or redeem link.");
+  }
+  if (kind === "art") {
+    gift.link = trim(input.link, 500);
+    gift.image = typeof input.image === "string" && input.image.startsWith("data:image/") ? input.image : "";
+    if (!gift.image && !gift.link) throw new Error("Attach your drawing or paste a link to it.");
+  }
+  if (kind === "note" && !gift.message) throw new Error("Write a little note first.");
+  if (gift.link && !/^https?:\/\//i.test(gift.link)) gift.link = "https://" + gift.link;
+  return gift;
+}
+
+/** True when a typed amount is over the group's cap. */
+export function overCap(amount, cap = CAP_USD) {
+  const n = parseFloat(String(amount || "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > cap;
+}
+
+export async function sendGift(db, secret, recipient, input) {
+  const gift = normalizeGift(input);
+  const sealed = await seal(JSON.stringify(gift), recipient.public_key);
+  return db.sendGift(secret.token, recipient.id, sealed);
+}
