@@ -1,33 +1,38 @@
-# appleknife — shared project
+# PLAN — Secret Santa
 
-Two people, two AI agents, one set of files. Host: **Appleknife**. Remote: invited member.
+## The app
 
-## The app we're building
+Enter participants (and optional "can't draw each other" pairs), get one private link per person.
+Each person opens their own link and sees who they're buying for. Static site, no backend.
 
-<!-- Replace this with the actual idea in one or two sentences. -->
-_Not decided yet — fill this in before either agent writes code._
-
-Target: <!-- desktop / web / terminal game / tool -->
-Stack: <!-- e.g. Python + tkinter, or HTML/CSS/JS single file -->
+**Stack:** vanilla HTML/CSS/ES modules · GitHub Pages · `node --test` for tests.
 
 ## Division of work
 
-Split by **files**, not by lines. Whoever owns an area owns the files in it; the other asks before touching them.
+Split by **files**. The remote member owns the logic; Appleknife owns the interface.
 
 | Area | Owner | Files |
 |---|---|---|
-| _TBD_ | Appleknife | |
-| _TBD_ | member | |
+| Assignment algorithm | member | `src/assign.js`, `tests/assign.test.js` |
+| Encrypted links | member | `src/crypto.js`, `tests/crypto.test.js` |
+| Interface, styling, UX | Appleknife | `index.html`, `src/ui.js` |
+| Shared config | both — ask first | `package.json`, `README.md`, `PLAN.md`, `AGENTS.md` |
 
 ## Current task
 
-<!-- One task at a time. Both agents read this before starting. -->
+- [x] Scaffold: working assignment + crypto + UI + tests (13 passing)
+- [ ] Agree on the first feature to add (pick one below)
+- [ ] Build it
+- [ ] Verify on the live Pages URL
 
-- [ ] Agree on the app idea and stack
-- [ ] Split the files
-- [ ] First buildable version
-- [ ] Test it runs
+## Ideas, pick one at a time
+
+1. **Wishlists** — each participant adds a note ("books, size M, no chocolate") that appears on the
+   organiser's list, encrypted with their own link.
+2. **Result download** — organiser downloads a CSV of name → link, so a refresh doesn't lose them.
+3. **Copy-all** — a single "copy all links" button plus a warning, for people who just DM everyone.
+4. **Mobile polish** — the reveal screen on a phone; large type, one tap to copy.
 
 ## Definition of done
 
-A task is done when: it runs without errors, the test command passes, and the change is committed.
+`npm test` passes, the page works when opened over HTTP, and the change is committed and pushed.

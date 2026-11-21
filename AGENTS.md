@@ -27,6 +27,18 @@ This project is edited by **two people and two AI agents at the same time**. Rea
 - Never run `git reset --hard`, `git checkout --`, or `git push --force`.
 - Never "fix forward" a broken change — use `rollback_file` or ask.
 
+## Git
+
+Two people push to the same `master`. Keep it boring:
+
+1. **`git pull --rebase` before you start** and before you push.
+2. Commit small and often, with a message that says *why*.
+3. Never `git push --force`, never rewrite history, never `git reset --hard`.
+4. If a rebase conflicts in a file you don't own, stop and ask rather than choosing sides.
+5. `node_modules/` and `.opencoop/` stay out of the repo (they're in `.gitignore`).
+
+GitHub Pages deploys `master` — a broken commit there is a broken app for everyone.
+
 ## Checks
 
 | Stack | Command |

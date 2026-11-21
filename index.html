@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Secret Santa</title>
+    <style>
+      :root {
+        --bg: #1e1e2e;
+        --panel: #181825;
+        --text: #cdd6f4;
+        --muted: #7f849c;
+        --accent: #89b4fa;
+        --green: #a6e3a1;
+        --red: #f38ba8;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.6 "Segoe UI", system-ui, sans-serif;
+        display: grid;
+        place-items: start center;
+        padding: 48px 20px;
+      }
+      main { width: min(720px, 100%); }
+      h1 { font-size: 26px; margin: 0 0 4px; }
+      p.lede { color: var(--muted); margin: 0 0 28px; }
+      fieldset {
+        border: 1px solid #313244;
+        border-radius: 10px;
+        padding: 16px 18px 18px;
+        margin: 0 0 18px;
+        background: var(--panel);
+      }
+      legend { padding: 0 6px; color: var(--muted); font-size: 13px; }
+      textarea {
+        width: 100%;
+        min-height: 96px;
+        resize: vertical;
+        background: #11111b;
+        color: var(--text);
+        border: 1px solid #313244;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font: 14px/1.5 ui-monospace, Consolas, monospace;
+      }
+      textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+      button {
+        background: var(--accent);
+        color: #11111b;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font: 600 14px/1 "Segoe UI", system-ui, sans-serif;
+        cursor: pointer;
+      }
+      button:hover { filter: brightness(1.08); }
+      button.copy {
+        background: #313244;
+        color: var(--text);
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+      td { padding: 8px 4px; border-bottom: 1px solid #313244; }
+      td:last-child { text-align: right; width: 120px; }
+      .status { color: var(--muted); font-size: 13px; margin-top: 14px; }
+      .status.error { color: var(--red); }
+      .note { color: var(--muted); font-size: 13px; }
+      #reveal { text-align: center; padding-top: 40px; }
+      #reveal .label { color: var(--muted); font-size: 14px; }
+      #match {
+        font-size: 34px;
+        font-weight: 700;
+        color: var(--green);
+        margin: 8px 0 28px;
+        word-break: break-word;
+      }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section id="organizer">
+        <h1>Secret Santa</h1>
+        <p class="lede">
+          Everyone gets a private link. Nobody sees anyone else's match — including this page,
+          because the links are computed in your browser and never uploaded.
+        </p>
+
+        <fieldset>
+          <legend>Participants — one per line</legend>
+          <textarea id="names" placeholder="Ana&#10;Ben&#10;Cleo&#10;Dev"></textarea>
+        </fieldset>
+
+        <fieldset>
+          <legend>Can't draw each other — one pair per line, e.g. "Ana - Ben"</legend>
+          <textarea id="exclusions" placeholder="Ana - Ben&#10;Cleo - Dev"></textarea>
+        </fieldset>
+
+        <button id="generate">Generate links</button>
+        <p class="status" id="status"></p>
+        <table><tbody id="results"></tbody></table>
+        <p class="note" id="links-note" hidden>
+          Each link <em>is</em> the secret — it contains that one assignment, encrypted. Send each
+          person only their own, then close this page. Nothing is stored.
+        </p>
+      </section>
+
+      <section id="reveal" class="hidden">
+        <p class="label">You are buying a gift for</p>
+        <p id="match">…</p>
+        <button id="start-over">Start over</button>
+      </section>
+    </main>
+    <script type="module" src="./src/ui.js"></script>
+  </body>
+</html>
