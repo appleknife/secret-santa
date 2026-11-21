@@ -27,6 +27,21 @@ and no email addresses anywhere in the system. One fixed cap: **$20 max**.
 - **Hardening (later):** move the draw into a Supabase Edge Function so the organiser's browser never
   sees the mapping at all. Not required for v1.
 
+## Status (Nov 21, 2026)
+
+Steps 1–8 are built; only the live Supabase project is left (step 1). Changes from the plan above:
+
+- **Keys:** ECDH P-256 instead of RSA. It does the same job with much shorter private links
+  (`src/keys.js`, new file; `src/crypto.js` and `src/assign.js` are reused unchanged).
+- **Access:** no RLS policies for the website at all. The tables are in a private `santa` schema,
+  and the website only calls token-checked `santa_*` functions.
+- **Gifts:** stored with a sender *tag* instead of a giver id, wrapped until gift day (enforced by
+  the database), and the giver sees "Opened ✓" instead of a manual "delivered" checkbox.
+- **Demo mode:** with `src/config.js` empty, the same rules run in `localStorage`, so the app
+  works before Supabase is set up.
+- **Not done (fine for a group of 5):** "can't draw each other" exclusions, join deadline, and
+  Edge Function hardening.
+
 ## Division of work
 
 Split by **files**. The remote member owns the logic; Appleknife owns the interface and data layer.

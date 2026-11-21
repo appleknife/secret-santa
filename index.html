@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#fdf9f8" />
+    <meta name="theme-color" content="#153c2e" />
     <meta
       name="description"
       content="A cosy, private Secret Santa organizer. Add your people, write little hints, and send everyone their own encrypted secret link."
@@ -463,6 +463,7 @@
 
       textarea,
       input[type="text"],
+      input[type="url"],
       input[type="date"] {
         width: 100%;
         padding: 11px 14px;
@@ -819,6 +820,627 @@
         .letter { padding: 16px 14px; }
         td:last-child { width: 100px; }
       }
+
+      /* ═══════════════════  cozy christmas theme (Nov 2026)  ═══════════════════
+         Evergreen night outside, warm cream card inside, cranberry + pine + gold
+         accents. Layout lives above; this layer only sets colour, type and texture. */
+      @font-face {
+        font-family: "Fraunces";
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url("./fonts/fraunces-soft.woff2") format("woff2-variations");
+      }
+      @font-face {
+        font-family: "Nunito";
+        font-style: normal;
+        font-weight: 200 1000;
+        font-display: swap;
+        src: url("./fonts/nunito.woff2") format("woff2-variations");
+      }
+
+      :root {
+        --cream: #fbf5e9;
+        --paper: #fffcf5;
+        --vanilla: #fff6dc;
+        --ink: #2f3a33;
+        --ink-soft: #5d675f;
+        --pine: #2f6b52;
+        --pine-dark: #1f4d3a;
+        --pine-night: #133528;
+        --cranberry: #a8303b;
+        --cranberry-deep: #7f1f2b;
+        --berry-ink: #9a2c37;
+        --gold: #d9b25f;
+        --gold-deep: #b98d3a;
+        --line: #eadfcb;
+        --line-soft: #f2e9d8;
+        --display: "Fraunces", Georgia, "Times New Roman", serif;
+        --body: "Nunito", ui-rounded, "Segoe UI Rounded", "Segoe UI", system-ui, sans-serif;
+
+        --flake-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104' viewBox='0 0 104 104'%3E%3Cg fill='none' stroke='%23fbf5e9' stroke-width='1.1' stroke-linecap='round' opacity='.07'%3E%3Cpath d='M52 18v68M18 52h68M28 28l48 48M76 28L28 76'/%3E%3Cpath d='M44 25l8 8 8-8M44 79l8-8 8 8M25 44l8 8-8 8M79 44l-8 8 8 8'/%3E%3Ccircle cx='52' cy='52' r='2.8'/%3E%3C/g%3E%3C/svg%3E");
+        --holly-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg opacity='.38'%3E%3Cg transform='translate(15 15)'%3E%3Cellipse cx='-6' cy='4' rx='8' ry='3.4' transform='rotate(-32 -6 4)' fill='%23cfdfd2'/%3E%3Cellipse cx='6' cy='4' rx='8' ry='3.4' transform='rotate(32 6 4)' fill='%23cfdfd2'/%3E%3Ccircle cx='0' cy='-3' r='2.2' fill='%23e9b3ad'/%3E%3Ccircle cx='-4' cy='-6' r='1.6' fill='%23e9b3ad'/%3E%3Ccircle cx='4' cy='-6' r='1.6' fill='%23e9b3ad'/%3E%3C/g%3E%3Cg transform='translate(49 49) rotate(180)'%3E%3Cellipse cx='-6' cy='4' rx='8' ry='3.4' transform='rotate(-32 -6 4)' fill='%23cfdfd2'/%3E%3Cellipse cx='6' cy='4' rx='8' ry='3.4' transform='rotate(32 6 4)' fill='%23cfdfd2'/%3E%3Ccircle cx='0' cy='-3' r='2.2' fill='%23e9b3ad'/%3E%3Ccircle cx='-4' cy='-6' r='1.6' fill='%23e9b3ad'/%3E%3Ccircle cx='4' cy='-6' r='1.6' fill='%23e9b3ad'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        /* fair-isle divider: pine zigzag stitches with cranberry dots */
+        --band-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='20' viewBox='0 0 48 20'%3E%3Cg fill='none' stroke='%235f8f78' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M0 3h48M0 17h48' stroke-dasharray='2 3'/%3E%3Cpath d='M3 15l5-10 5 10M13 5l5 10 5-10M23 15l5-10 5 10M33 5l5 10 5-10M43 15l2-4 2 4'/%3E%3C/g%3E%3Cg fill='%23a8303b'%3E%3Ccircle cx='8' cy='11' r='1.5'/%3E%3Ccircle cx='28' cy='11' r='1.5'/%3E%3Ccircle cx='18' cy='8.5' r='1'/%3E%3Ccircle cx='38' cy='8.5' r='1'/%3E%3C/g%3E%3C/svg%3E");
+        /* jumper knit: cream diamonds and snowflake crosses on cranberry */
+        --knit-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='22' viewBox='0 0 36 22'%3E%3Crect width='36' height='22' fill='%23a8303b'/%3E%3Cpath d='M0 2.6h36M0 19.4h36' stroke='%23f4ead5' stroke-width='1.3' stroke-dasharray='2 2'/%3E%3Cpath d='M9 5.6l5.4 5.4L9 16.4 3.6 11z' fill='%23f4ead5'/%3E%3Ccircle cx='9' cy='11' r='1.5' fill='%23a8303b'/%3E%3Cpath d='M27 6.6v8.8M22.6 11h8.8M23.9 7.9l6.2 6.2M30.1 7.9l-6.2 6.2' stroke='%23f4ead5' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+
+        --shadow-warm: 0 30px 70px rgba(5, 20, 14, .45);
+      }
+
+      /* evergreen night with a warm lamplight glow */
+      body {
+        color: var(--ink);
+        font-family: var(--body);
+        background-color: var(--pine-night);
+        background-image:
+          var(--flake-tile),
+          radial-gradient(circle at 1px 1px, rgba(251, 245, 233, .06) 1.2px, transparent 1.5px),
+          radial-gradient(ellipse at 50% -8%, rgba(255, 214, 140, .22), transparent 55%),
+          linear-gradient(175deg, #1c4a39 0%, #153c2e 45%, #0f2c22 100%);
+      }
+      body::before { background: radial-gradient(circle, rgba(232, 176, 92, .55), transparent 70%); opacity: .35; }
+      body::after { background: radial-gradient(circle, rgba(168, 48, 59, .7), transparent 70%); opacity: .3; }
+      .grain { opacity: .06; mix-blend-mode: soft-light; }
+      .snow .flake,
+      .snow .flake.near { filter: drop-shadow(0 0 2px rgba(255, 255, 255, .35)); }
+      .snow .flake.far { filter: blur(.4px); }
+
+      /* the card: thick cream stationery with a gold edge */
+      .card {
+        background-image:
+          var(--holly-tile),
+          radial-gradient(ellipse at 50% 0%, rgba(255, 236, 190, .55), transparent 60%),
+          linear-gradient(180deg, #fffcf5, var(--cream)),
+          linear-gradient(135deg, #e9cf8f, #c9a24f 40%, #ead49c 70%, #b98d3a);
+        background-size: 64px 64px, auto, auto, auto;
+        box-shadow:
+          0 0 0 6px rgba(251, 245, 233, .06),
+          var(--shadow-warm);
+      }
+      .card::before { border-color: rgba(185, 141, 58, .38); }
+      .card::after {
+        background: repeating-linear-gradient(115deg, var(--cranberry) 0 9px, #fbf5e9 9px 18px);
+        box-shadow: 0 6px 14px rgba(60, 10, 18, .28), inset 0 -2px 0 rgba(0, 0, 0, .08);
+      }
+      .corners svg { color: var(--gold); opacity: .9; }
+      .bow { filter: drop-shadow(0 6px 8px rgba(60, 10, 18, .3)); }
+      .bow path:nth-of-type(1) { fill: #b8404a; stroke: #7f1f2b; }
+      .bow path:nth-of-type(2) { fill: #c9525b; stroke: #7f1f2b; }
+      .bow circle:nth-of-type(1) { fill: #a8303b; stroke: #7f1f2b; }
+      .bow path:nth-of-type(3) { stroke: #a8303b; }
+
+      /* hero */
+      .mascot-ring {
+        border-color: rgba(185, 141, 58, .45);
+        background: radial-gradient(circle at 50% 34%, #fffdf6 0%, var(--vanilla) 48%, #f1e6cc 100%);
+        box-shadow:
+          0 0 40px 8px rgba(240, 200, 120, .45),
+          0 14px 30px rgba(31, 77, 58, .18),
+          inset 0 0 0 1.5px rgba(255, 255, 255, .9);
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 700;
+        font-variation-settings: "SOFT" 100;
+        letter-spacing: -.3px;
+        color: var(--cranberry);
+      }
+      @supports (-webkit-background-clip: text) or (background-clip: text) {
+        h1 { background: linear-gradient(180deg, #b8404a 10%, var(--cranberry-deep) 95%); -webkit-background-clip: text; background-clip: text; }
+      }
+      .sparkle { color: var(--gold); -webkit-text-fill-color: var(--gold); }
+      .title-rule span { background: linear-gradient(90deg, transparent, var(--gold)); }
+      .title-rule span:last-child { background: linear-gradient(90deg, var(--gold), transparent); }
+      .lede { color: var(--ink-soft); font-size: 16.5px; }
+
+      .rules span,
+      .rules span:nth-child(2),
+      .rules span:nth-child(3) {
+        border-color: var(--line);
+        background-image: linear-gradient(180deg, #fffdf8, #f8efdd);
+        box-shadow: 0 3px 8px rgba(91, 64, 30, .08);
+      }
+      .rules span { color: var(--cranberry-deep); }
+      .rules span:nth-child(2) { color: var(--pine-dark); }
+      .rules span:nth-child(3) { color: #6b5328; }
+      .steps li { border-color: #e3d5bc; background: rgba(255, 252, 245, .8); color: var(--ink-soft); }
+      .steps b,
+      .steps li:nth-child(2) b,
+      .steps li:nth-child(3) b {
+        border: 0;
+        background: var(--pine);
+        color: #fbf5e9;
+        font-family: var(--display);
+      }
+      .steps li:nth-child(2) b { background: var(--cranberry); }
+      .steps li:nth-child(3) b { background: var(--gold-deep); }
+
+      /* form */
+      fieldset {
+        border-color: var(--line);
+        background-image: linear-gradient(180deg, rgba(255, 253, 248, .96), rgba(250, 243, 229, .9));
+        box-shadow: 0 6px 16px rgba(91, 64, 30, .06), inset 0 1px 0 #fff;
+      }
+      fieldset::before { border-color: rgba(185, 141, 58, .25); }
+      fieldset::after { opacity: .7; }
+      legend {
+        border-color: #e6d6b8;
+        background: linear-gradient(180deg, #fffdf6, #f6ecd6);
+        color: var(--pine-dark);
+        font-family: var(--display);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0;
+        box-shadow: 0 2px 6px rgba(91, 64, 30, .08);
+      }
+      textarea,
+      input[type="text"],
+      input[type="url"],
+      input[type="date"] {
+        border-color: #e6dac4;
+        background-color: #fffdf8;
+        background-image: none;
+        font-family: var(--body);
+        box-shadow: inset 0 1px 3px rgba(91, 64, 30, .06);
+      }
+      textarea {
+        font-family: var(--body);
+        background-image: repeating-linear-gradient(180deg, transparent 0 26px, rgba(217, 178, 95, .22) 26px 27px);
+      }
+      input:focus,
+      textarea:focus {
+        border-color: var(--pine);
+        background-color: #fff;
+        box-shadow: 0 0 0 4px rgba(47, 107, 82, .14);
+      }
+      ::placeholder { color: #a59d8d; }
+      .date-row label,
+      .wish-row span { color: var(--pine-dark); font-weight: 700; }
+      .hint { color: #7a7466; }
+
+      /* buttons: a cranberry candy-cane primary, cream secondary */
+      button {
+        font-family: var(--body);
+        background-image:
+          repeating-linear-gradient(115deg, rgba(255, 255, 255, .1) 0 6px, transparent 6px 13px),
+          linear-gradient(180deg, #bd3f4a, var(--cranberry-deep));
+        box-shadow: 0 10px 22px rgba(127, 31, 43, .28), inset 0 1px 0 rgba(255, 255, 255, .3);
+      }
+      button:hover { box-shadow: 0 14px 28px rgba(127, 31, 43, .32), inset 0 1px 0 rgba(255, 255, 255, .35); }
+      button:active { box-shadow: 0 6px 14px rgba(127, 31, 43, .25); }
+      button:focus-visible { outline-color: rgba(217, 178, 95, .9); }
+      button.secondary {
+        color: var(--cranberry-deep);
+        border-color: #e3d2b2;
+        background-image: linear-gradient(180deg, #fffdf8, #f6ecd8);
+        box-shadow: 0 6px 14px rgba(91, 64, 30, .1), inset 0 1px 0 #fff;
+      }
+      .status { color: var(--ink-soft); }
+      .status.error { color: var(--cranberry); }
+
+      /* results: little gift tags */
+      td {
+        border-color: var(--line);
+        background: linear-gradient(180deg, #fffdf8, #fbf4e6);
+      }
+      td:first-child { border-left: 4px solid var(--cranberry); color: var(--pine-dark); font-family: var(--display); font-size: 17px; }
+      td:first-child::before { box-shadow: inset 0 0 0 1.5px var(--gold), 0 1px 0 #fff; background: var(--cream); }
+      td:last-child { border-right-color: var(--line); }
+      tbody tr:nth-child(even) td { background: linear-gradient(180deg, #fffdf8, #f4f2e6); }
+      tbody tr:nth-child(even) td:first-child { border-left-color: var(--pine); }
+      tbody tr:hover td { background: linear-gradient(180deg, #fffdf8, #f7ead2); }
+      .note { border-top-color: var(--line); color: #6f6a5e; }
+
+      /* reveal */
+      #reveal .label { color: var(--ink-soft); font-family: var(--display); font-style: italic; font-size: 16px; }
+      #match {
+        border: 1.5px dashed rgba(185, 141, 58, .6);
+        color: var(--cranberry);
+        font-family: var(--display);
+        font-weight: 700;
+        font-variation-settings: "SOFT" 100;
+        background-image:
+          radial-gradient(ellipse at 50% 0%, rgba(255, 236, 190, .8), transparent 70%),
+          linear-gradient(180deg, #fffdf8, #f8eedb);
+        box-shadow: 0 10px 24px rgba(91, 64, 30, .14), inset 0 1px 0 #fff;
+      }
+      .seal {
+        background: radial-gradient(circle at 34% 28%, #d1545f, var(--cranberry) 58%, var(--cranberry-deep));
+        color: #f4ead5;
+        box-shadow: 0 6px 12px rgba(127, 31, 43, .35), inset 0 0 0 3px rgba(255, 255, 255, .14), inset 0 -2px 4px rgba(60, 10, 18, .35);
+      }
+      .letter {
+        border-color: var(--line);
+        border-left-color: var(--pine);
+        background-image:
+          repeating-linear-gradient(180deg, transparent 0 26px, rgba(217, 178, 95, .25) 26px 27px),
+          linear-gradient(135deg, #fffdf8, #faf1df);
+        box-shadow: 0 8px 18px rgba(91, 64, 30, .1), inset 0 1px 0 #fff;
+      }
+      .letter::before { background: repeating-linear-gradient(135deg, rgba(168, 48, 59, .75) 0 8px, #fbf5e9 8px 16px); }
+      .letter h2 { color: var(--cranberry-deep); font-family: var(--display); font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 17px; }
+      .letter p { color: var(--ink); font-size: 17px; }
+      .stamp {
+        border-color: rgba(168, 48, 59, .45);
+        background: radial-gradient(circle at 50% 36%, #fffaf0, #f5e9d2);
+        color: var(--cranberry);
+        box-shadow: 0 6px 14px rgba(91, 64, 30, .14);
+      }
+      .stamp small { color: var(--cranberry-deep); opacity: .75; }
+
+      /* knit bands: a strip of christmas jumper */
+      .knit-band {
+        height: 22px;
+        border: 0;
+        border-radius: 4px;
+        background-image: var(--knit-tile);
+        background-size: 36px 22px;
+        background-repeat: repeat-x;
+        background-position: center;
+        box-shadow: 0 2px 0 rgba(127, 31, 43, .25);
+        opacity: 1;
+      }
+      footer { color: rgba(251, 245, 233, .72); }
+      .knit-rule {
+        height: 1px;
+        max-width: 220px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        opacity: .7;
+      }
+      .band {
+        height: 14px;
+        margin: 8px 0 22px;
+        border-radius: 3px;
+        background-image: var(--knit-tile);
+        background-size: 23px 14px;
+        box-shadow: 0 2px 0 rgba(127, 31, 43, .2);
+      }
+      .mug path:first-child { fill: #fbf5e9; }
+
+      @media (max-width: 560px) {
+        .card { box-shadow: 0 0 0 4px rgba(251, 245, 233, .06), 0 20px 44px rgba(5, 20, 14, .45); }
+      }
+
+      /* ═══════════════════  sign-up app components  ═══════════════════ */
+      .demo-banner {
+        margin: 0 auto 26px;
+        padding: 9px 16px;
+        border: 1px dashed rgba(217, 178, 95, .6);
+        border-radius: 14px;
+        background: rgba(251, 245, 233, .08);
+        color: #f4ead5;
+        font-size: 13px;
+        text-align: center;
+      }
+      .demo-banner b { color: var(--gold); }
+
+      a.mascot-ring { text-decoration: none; }
+      .loading { margin: 24px 0; text-align: center; color: var(--ink-soft); font-style: italic; }
+      .muted { color: var(--ink-soft); }
+      p.small { font-size: 13px; color: var(--ink-soft); }
+      .center { justify-content: center; }
+      .stack { display: grid; gap: 14px; }
+      .stack > fieldset { margin: 0; }
+      .two { display: grid; grid-template-columns: 1fr 120px; gap: 12px; align-items: start; }
+      .two .field { margin: 0; }
+      .hero { margin-bottom: 14px; }
+      .lede:empty { display: none; }
+
+      .section-title {
+        margin: 8px 0 2px;
+        font-family: var(--display);
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--pine-dark);
+        text-align: center;
+      }
+
+      .field { display: grid; gap: 6px; margin: 0 0 12px; }
+      .field:last-child { margin-bottom: 0; }
+      .field > span { font-weight: 700; font-size: 14px; color: var(--pine-dark); }
+      .field small { margin-left: 6px; font-weight: 500; color: #8a8372; font-size: 12.5px; }
+      .field textarea { min-height: 78px; }
+
+      /* chunky radio chips */
+      .choice { display: flex; flex-wrap: wrap; gap: 8px; }
+      .choice label { position: relative; cursor: pointer; }
+      .choice input { position: absolute; opacity: 0; pointer-events: none; }
+      .choice span {
+        display: inline-block;
+        padding: 8px 14px;
+        border: 1.5px solid #e3d5bc;
+        border-radius: 999px;
+        background: #fffdf8;
+        font-size: 14px;
+        font-weight: 600 !important;
+        color: var(--ink) !important;
+        transition: background .15s ease, border-color .15s ease, transform .15s ease;
+      }
+      .choice label:hover span { transform: translateY(-1px); }
+      .choice input:checked + span {
+        border-color: var(--pine);
+        background: var(--pine);
+        color: #fbf5e9 !important;
+        box-shadow: 0 4px 10px rgba(31, 77, 58, .22);
+      }
+      .choice input:focus-visible + span { outline: 3px solid rgba(217, 178, 95, .9); outline-offset: 2px; }
+
+      /* invite header for join / my page */
+      .invite { text-align: center; margin: 0 0 14px; }
+      .eyebrow { margin: 0; color: var(--ink-soft); font-family: var(--display); font-style: italic; font-size: 16px; }
+      .eyebrow b { font-style: normal; color: var(--pine-dark); }
+      .group-name {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 700;
+        font-variation-settings: "SOFT" 100;
+        font-size: 30px;
+        line-height: 1.15;
+        color: var(--pine-dark);
+        word-break: break-word;
+      }
+      .meta { margin: 4px 0 0; color: #7a6a45; font-size: 14px; font-weight: 600; }
+
+      .panel {
+        position: relative;
+        margin: 0 0 16px;
+        padding: 18px 18px;
+        border: 1.5px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 253, 248, .97), rgba(250, 243, 229, .92));
+        box-shadow: 0 6px 16px rgba(91, 64, 30, .06), inset 0 1px 0 #fff;
+      }
+      .panel-title {
+        margin: 0 0 10px;
+        font-family: var(--display);
+        font-size: 19px;
+        font-weight: 600;
+        color: var(--pine-dark);
+      }
+      .panel h4 { margin: 18px 0 8px; font-family: var(--display); font-weight: 600; color: var(--pine-dark); font-size: 16px; }
+      .count { color: var(--gold-deep); font-weight: 500; }
+
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; padding: 0; list-style: none; }
+      .chips li {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 13px;
+        border: 1.5px solid #e3d5bc;
+        border-radius: 999px;
+        background: #fffdf8;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--pine-dark);
+      }
+      .chips li.you { border-color: var(--cranberry); color: var(--cranberry-deep); }
+      .chips li.you::after { content: "(you)"; margin-left: 4px; font-weight: 500; font-size: 12px; color: var(--ink-soft); }
+      .chips .star { color: var(--gold-deep); }
+      .chip-x {
+        margin-left: 4px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: none;
+        box-shadow: none;
+        color: var(--ink-soft);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .chip-x:hover { background: var(--cream); transform: none; box-shadow: none; color: var(--cranberry); }
+      .who { margin: 16px 0; }
+
+      .copy-row { display: flex; gap: 8px; align-items: center; }
+      .copy-row input { flex: 1; min-width: 0; font-size: 13px; color: var(--ink-soft); }
+      .copy-row button { flex: none; }
+      .share { margin-top: 14px; }
+      .share p { margin: 0 0 6px; font-weight: 700; font-size: 14px; color: var(--pine-dark); }
+      .draw-box { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+      .draw-box p:first-child { margin-top: 0; }
+
+      .callout {
+        margin: 0 0 16px;
+        padding: 14px 16px;
+        border: 1.5px solid var(--line);
+        border-left: 5px solid var(--cranberry);
+        border-radius: 14px;
+        background: #fffdf8;
+      }
+      .callout.gold { border-left-color: var(--gold); background: linear-gradient(180deg, #fffbee, #fbf1d9); }
+      .callout h3 { margin: 0 0 4px; font-family: var(--display); font-weight: 600; color: var(--cranberry-deep); font-size: 18px; }
+      .callout p { margin: 6px 0; }
+      .warn { margin: -4px 0 0; color: var(--cranberry); font-weight: 700; font-size: 13.5px; }
+
+      a.button {
+        display: inline-block;
+        padding: 13px 24px;
+        border-radius: 999px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+      a.button.secondary { color: var(--cranberry-deep); border: 1.5px solid #e3d2b2; background: linear-gradient(180deg, #fffdf8, #f6ecd8); }
+      button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+      .my-groups ul { margin: 6px 0 18px; padding: 0; list-style: none; display: grid; gap: 8px; }
+      .my-groups a {
+        display: block;
+        padding: 10px 14px;
+        border: 1.5px solid var(--line);
+        border-left: 4px solid var(--pine);
+        border-radius: 12px;
+        background: #fffdf8;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .my-groups a:hover { border-left-color: var(--cranberry); background: #fff; }
+      .my-groups b { font-family: var(--display); font-weight: 600; color: var(--pine-dark); }
+
+      /* the envelope */
+      .match-panel { text-align: center; }
+      .envelope {
+        position: relative;
+        display: block;
+        width: min(340px, 100%);
+        height: 190px;
+        margin: 6px auto;
+        padding: 0;
+        border-radius: 14px;
+        overflow: hidden;
+        color: var(--ink);
+        background: linear-gradient(180deg, #f8ecd3, #efdcb7);
+        box-shadow: 0 16px 30px rgba(91, 64, 30, .2), inset 0 0 0 1.5px rgba(185, 141, 58, .35);
+      }
+      .envelope:hover { transform: translateY(-3px) rotate(-.6deg); }
+      .envelope-flap {
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 62%;
+        background: linear-gradient(180deg, #fbf3e2, #f0dfbd);
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        filter: drop-shadow(0 2px 0 rgba(185, 141, 58, .3));
+        transform-origin: top;
+        transition: transform .6s ease;
+      }
+      .envelope-seal {
+        position: absolute;
+        top: 46%;
+        left: 50%;
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 46% 54% 51% 49% / 52% 48% 55% 45%;
+        background: radial-gradient(circle at 34% 28%, #d1545f, var(--cranberry) 58%, var(--cranberry-deep));
+        color: #f4ead5;
+        font-size: 17px;
+        transform: translate(-50%, -50%) rotate(-8deg);
+        box-shadow: 0 4px 10px rgba(127, 31, 43, .35);
+        transition: opacity .3s ease;
+      }
+      .envelope-label {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 16px;
+        padding: 0 16px;
+        font-family: var(--display);
+        font-style: italic;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--cranberry-deep);
+        line-height: 1.3;
+      }
+      .envelope.opening .envelope-flap { transform: rotateX(180deg); }
+      .envelope.opening .envelope-seal { opacity: 0; }
+      .match-card { animation: card-pop .5s cubic-bezier(.2, .8, .25, 1) both; }
+      .match-card .label { margin: 4px 0 8px; color: var(--ink-soft); font-family: var(--display); font-style: italic; font-size: 16px; }
+      .match-card .letter { margin-top: 8px; }
+      .pref { margin: 8px 0 0 !important; font-size: 14px !important; color: var(--pine-dark) !important; font-weight: 700; }
+
+      /* gift form tabs */
+      .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 14px; }
+      .tabs button {
+        padding: 9px 14px;
+        font-size: 14px;
+        color: var(--pine-dark);
+        border: 1.5px solid #e3d5bc;
+        background: #fffdf8;
+        box-shadow: none;
+      }
+      .tabs button[aria-selected="true"] {
+        color: #fbf5e9;
+        border-color: var(--pine);
+        background: var(--pine);
+        box-shadow: 0 4px 10px rgba(31, 77, 58, .22);
+      }
+      .tabs button:hover { transform: translateY(-1px); }
+      .art-preview, .gift img.art {
+        display: block;
+        max-width: 100%;
+        max-height: 360px;
+        margin: 0 auto;
+        border: 6px solid #fff;
+        border-radius: 6px;
+        box-shadow: 0 8px 20px rgba(91, 64, 30, .18);
+        transform: rotate(-1deg);
+      }
+      .file-field input[type="file"] {
+        padding: 10px;
+        border: 1.5px dashed #d8c7a3;
+        border-radius: 14px;
+        background: #fffdf8;
+        font-family: var(--body);
+        font-size: 14px;
+      }
+
+      .gift-list { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+      .gift-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        background: #fffdf8;
+        font-size: 14px;
+      }
+      .gift-text { flex: 1; min-width: 0; }
+      .badge {
+        padding: 2px 10px;
+        border-radius: 999px;
+        background: #f3e6c9;
+        color: #6b5328;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .badge.open { background: var(--pine); color: #fbf5e9; }
+      [data-inbox] .gift-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+      [data-inbox] .gift-list:has(.gift-body) { grid-template-columns: 1fr; }
+      .gift {
+        padding: 14px;
+        border: 1.5px solid var(--line);
+        border-radius: 16px;
+        background: #fffdf8;
+        text-align: center;
+      }
+      .gift.wrapped { display: inline-grid; place-items: center; padding: 10px; }
+      .gift-box { display: inline-block; font-size: 38px; line-height: 1; animation: bob 3.2s ease-in-out infinite; }
+      .unwrap { width: 100%; padding: 16px; font-size: 16px; }
+      .unwrap .gift-box { font-size: 26px; vertical-align: middle; }
+      .gift-body { text-align: left; }
+      .gift-title { margin: 0 0 10px; font-family: var(--display); font-weight: 600; font-size: 18px; color: var(--cranberry-deep); }
+      .gift-message { white-space: pre-wrap; margin: 12px 0 0; font-size: 16px; }
+      .from { margin: 10px 0 0; text-align: right; font-family: var(--display); font-style: italic; color: var(--ink-soft); }
+      .gift-body .copy-row input { font-family: ui-monospace, Consolas, monospace; font-size: 15px; color: var(--ink); letter-spacing: .5px; }
+
+      details.fold { padding: 0; }
+      details.fold summary {
+        padding: 14px 18px;
+        cursor: pointer;
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 17px;
+        color: var(--pine-dark);
+        list-style: none;
+      }
+      details.fold summary::-webkit-details-marker { display: none; }
+      details.fold summary::after { content: "＋"; float: right; color: var(--gold-deep); }
+      details.fold[open] summary::after { content: "－"; }
+      details.fold > :not(summary) { margin-left: 18px; margin-right: 18px; }
+      details.fold > :last-child { margin-bottom: 18px; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .gift-box, .match-card { animation: none; }
+        .envelope-flap { transition: none; }
+      }
+      @media (max-width: 560px) {
+        .two { grid-template-columns: 1fr 96px; }
+        .group-name { font-size: 25px; }
+        .panel { padding: 16px 14px; }
+        .copy-row { flex-wrap: wrap; }
+        .copy-row input { flex-basis: 100%; }
+        .gift-row { flex-wrap: wrap; }
+      }
     </style>
   </head>
   <body>
@@ -854,15 +1476,15 @@
           <ellipse cx="56.6" cy="37.6" rx="2.4" ry="1.6" fill="#f6c6d0" opacity=".9" />
           <path d="M45.8 40 q2.2 1.8 4.4 0" fill="none" stroke="#3f6855" stroke-width="1.3" stroke-linecap="round" />
           <path d="M47.4 35 L54.6 36.6 L47.4 38.2 Q46.4 36.6 47.4 35 Z" fill="#e8a05c" stroke="#d98c47" stroke-width=".8" stroke-linejoin="round" />
-          <path d="M33.4 43.6 Q48 50.4 62.6 43.6 L63.2 48.6 Q48 56 32.8 48.6 Z" fill="#e3a3b0" stroke="#d17f92" stroke-width="1.2" stroke-linejoin="round" />
+          <path d="M33.4 43.6 Q48 50.4 62.6 43.6 L63.2 48.6 Q48 56 32.8 48.6 Z" fill="#2f6b52" stroke="#1f4d3a" stroke-width="1.2" stroke-linejoin="round" />
           <path d="M36.4 47.2 q11.6 5.4 23.2 0" fill="none" stroke="#fffdfb" stroke-width="1.1" stroke-linecap="round" opacity=".75" />
-          <path d="M37.2 49.6 Q35.6 56 36.6 62.6 L42.4 62.2 Q41.4 56.2 42.6 50.6 Z" fill="#e3a3b0" stroke="#d17f92" stroke-width="1.2" stroke-linejoin="round" />
+          <path d="M37.2 49.6 Q35.6 56 36.6 62.6 L42.4 62.2 Q41.4 56.2 42.6 50.6 Z" fill="#2f6b52" stroke="#1f4d3a" stroke-width="1.2" stroke-linejoin="round" />
           <path d="M37.4 54.4 l4.9.3M37.1 58.4 l5 .2" stroke="#fffdfb" stroke-width="1.1" stroke-linecap="round" opacity=".8" />
-          <path d="M37.6 62.6v2.2M39.6 62.5v2.2M41.6 62.3v2.2" stroke="#d17f92" stroke-width="1" stroke-linecap="round" />
-          <path d="M35.6 24.4 C35.6 13.6 41 9 48 9 C55 9 60.4 13.6 60.4 24.4 Z" fill="#e3a3b0" stroke="#d17f92" stroke-width="1.2" stroke-linejoin="round" />
-          <path d="M52.6 10.4 C56.8 12.4 59.2 16.6 59.4 22 L55.2 22 C55 17.6 54 13.6 51 11.4 Z" fill="#f6c6d0" opacity=".7" />
-          <rect x="34" y="21.2" width="28" height="6.4" rx="3.2" fill="#f6c6d0" stroke="#d17f92" stroke-width="1.2" />
-          <path d="M39.5 22.6v3.6M45 22.6v3.6M51 22.6v3.6M56.5 22.6v3.6" stroke="#d98a9a" stroke-width="1" stroke-linecap="round" opacity=".8" />
+          <path d="M37.6 62.6v2.2M39.6 62.5v2.2M41.6 62.3v2.2" stroke="#1f4d3a" stroke-width="1" stroke-linecap="round" />
+          <path d="M35.6 24.4 C35.6 13.6 41 9 48 9 C55 9 60.4 13.6 60.4 24.4 Z" fill="#b8404a" stroke="#7f1f2b" stroke-width="1.2" stroke-linejoin="round" />
+          <path d="M52.6 10.4 C56.8 12.4 59.2 16.6 59.4 22 L55.2 22 C55 17.6 54 13.6 51 11.4 Z" fill="#d9656e" opacity=".6" />
+          <rect x="34" y="21.2" width="28" height="6.4" rx="3.2" fill="#f4ead5" stroke="#c9b48c" stroke-width="1.2" />
+          <path d="M39.5 22.6v3.6M45 22.6v3.6M51 22.6v3.6M56.5 22.6v3.6" stroke="#d8c49e" stroke-width="1" stroke-linecap="round" opacity=".8" />
           <circle cx="48" cy="8.4" r="4.3" fill="#fff8e1" stroke="#e6c78d" stroke-width="1.1" />
           <path d="M45.4 7 q1.9-1.5 4.2-.9" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" opacity=".85" />
         </symbol>
@@ -916,7 +1538,12 @@
     <div class="grain" aria-hidden="true"></div>
 
     <main>
-      <section id="organizer" class="card">
+      <p id="demo-banner" class="demo-banner" hidden>
+        <b>Demo mode.</b> Everything is saved in this browser only, so links won't work on anyone else's device yet.
+        Connect Supabase to play with friends (see the README).
+      </p>
+
+      <section id="card" class="card">
         <div class="corners" aria-hidden="true">
           <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
           <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
@@ -945,35 +1572,35 @@
               <path d="M46 33v5" stroke="#cdb49c" stroke-width="1.1" />
               <rect x="43" y="38" width="6" height="3" rx="1.5" fill="#cdb49c" />
               <circle cx="46" cy="45" r="8" fill="#f7d7e1" opacity=".25" />
-              <circle class="bulb" cx="46" cy="45" r="5" fill="#e3a3b0" />
+              <circle class="bulb" cx="46" cy="45" r="5" fill="#c94450" />
               <circle cx="44.4" cy="43.4" r="1.5" fill="#fff" opacity=".72" />
             </g>
             <g>
               <path d="M105 46v5" stroke="#cdb49c" stroke-width="1.1" />
               <rect x="102" y="51" width="6" height="3" rx="1.5" fill="#cdb49c" />
               <circle cx="105" cy="58" r="8" fill="#fbf0cd" opacity=".4" />
-              <circle class="bulb" cx="105" cy="58" r="5" fill="#e6c78d" />
+              <circle class="bulb" cx="105" cy="58" r="5" fill="#e2b552" />
               <circle cx="103.4" cy="56.4" r="1.5" fill="#fff" opacity=".72" />
             </g>
             <g>
               <path d="M180 35v5" stroke="#cdb49c" stroke-width="1.1" />
               <rect x="177" y="40" width="6" height="3" rx="1.5" fill="#cdb49c" />
               <circle cx="180" cy="47" r="8" fill="#dff0e5" opacity=".5" />
-              <circle class="bulb" cx="180" cy="47" r="5" fill="#9ec9b0" />
+              <circle class="bulb" cx="180" cy="47" r="5" fill="#4f9a74" />
               <circle cx="178.4" cy="45.4" r="1.5" fill="#fff" opacity=".72" />
             </g>
             <g>
               <path d="M255 46v5" stroke="#cdb49c" stroke-width="1.1" />
               <rect x="252" y="51" width="6" height="3" rx="1.5" fill="#cdb49c" />
               <circle cx="255" cy="58" r="8" fill="#dfeaf5" opacity=".5" />
-              <circle class="bulb" cx="255" cy="58" r="5" fill="#a8c6e0" />
+              <circle class="bulb" cx="255" cy="58" r="5" fill="#6fa3cf" />
               <circle cx="253.4" cy="56.4" r="1.5" fill="#fff" opacity=".72" />
             </g>
             <g>
               <path d="M312 33v5" stroke="#cdb49c" stroke-width="1.1" />
               <rect x="309" y="38" width="6" height="3" rx="1.5" fill="#cdb49c" />
               <circle cx="312" cy="45" r="8" fill="#f7d7e1" opacity=".25" />
-              <circle class="bulb" cx="312" cy="45" r="5" fill="#e3a3b0" />
+              <circle class="bulb" cx="312" cy="45" r="5" fill="#c94450" />
               <circle cx="310.4" cy="43.4" r="1.5" fill="#fff" opacity=".72" />
             </g>
             <g fill="#e6c78d" opacity=".85">
@@ -981,112 +1608,16 @@
               <path d="M288 24l1.1 2.9 2.9 1.1-2.9 1.1-1.1 2.9-1.1-2.9-2.9-1.1 2.9-1.1z" />
             </g>
           </svg>
-
-          <div class="mascot-ring">
+          <a class="mascot-ring" href="#/" aria-label="Secret Santa home">
             <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true"><use href="#snowman-mascot" width="96" height="96" /></svg>
-          </div>
+          </a>
 
           <h1><span class="sparkle" aria-hidden="true">✦</span> Secret Santa <span class="sparkle" aria-hidden="true">✦</span></h1>
           <div class="title-rule" aria-hidden="true"><span></span><i>❖</i><span></span></div>
-          <p class="lede">A little holiday magic, kept private. Add your people, write a hint for each, then send everyone their own secret link.</p>
-          <p class="rules">
-            <span>🎁 $20 max</span>
-            <span>✨ digital or handmade</span>
-            <span>💌 no addresses, no emails</span>
-          </p>
-          <ol class="steps">
-            <li><b>1</b> list your people</li>
-            <li><b>2</b> add little hints</li>
-            <li><b>3</b> share secret links</li>
-          </ol>
+          <p id="lede" class="lede"></p>
         </header>
 
-        <div class="band" aria-hidden="true"></div>
-
-        <fieldset>
-          <legend>Event details</legend>
-          <p><input id="event-name" type="text" placeholder="Event name, e.g. The Harper Family" /></p>
-          <div class="date-row">
-            <label for="exchange-date">Gift day</label>
-            <input id="exchange-date" type="date" />
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Participants — one per line</legend>
-          <textarea id="names" placeholder="Ana&#10;Ben&#10;Cleo&#10;Dev"></textarea>
-        </fieldset>
-
-        <fieldset>
-          <legend>Can't draw each other — one pair per line, e.g. "Ana - Ben"</legend>
-          <textarea id="exclusions" placeholder="Ana - Ben&#10;Cleo - Dev"></textarea>
-        </fieldset>
-
-        <div id="wish-fields">
-          <p class="hint">Add names above to write a private hint for each person.</p>
-        </div>
-
-        <p class="actions" style="margin-top:18px">
-          <button id="generate">Wrap the gifts 🎁</button>
-          <button id="download" class="secondary small hidden">Download links (CSV) ⬇</button>
-        </p>
-        <p class="status" id="status"></p>
-        <div id="results-wrap" class="hidden">
-          <table><tbody id="results"></tbody></table>
-          <p class="note">
-            Each link <em>is</em> the secret — it holds that one assignment, encrypted. Send each person
-            only their own link by DM, then close this page. Nothing is stored and nobody sees anyone else's match.
-          </p>
-        </div>
-
-        <div class="knit-band" aria-hidden="true"></div>
-      </section>
-
-      <section id="reveal" class="card hidden">
-        <div class="corners" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
-          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
-          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
-          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
-        </div>
-
-        <svg class="bow" viewBox="0 0 80 46" aria-hidden="true">
-          <path d="M40 30C26 8 6 6 6 18c0 10 16 12 34 12z" fill="#f6c6d0" stroke="#d98a9a" stroke-width="1.4" />
-          <path d="M40 30C54 8 74 6 74 18c0 10-16 12-34 12z" fill="#fbe4ea" stroke="#d98a9a" stroke-width="1.4" />
-          <circle cx="40" cy="30" r="8" fill="#e3a3b0" stroke="#d98a9a" stroke-width="1.4" />
-          <circle cx="37.5" cy="27.5" r="2.4" fill="#fff" opacity=".55" />
-          <path d="M34 37l-5 9M46 37l5 9" stroke="#d98a9a" stroke-width="3.4" stroke-linecap="round" />
-        </svg>
-
-        <div class="stamp" aria-hidden="true">
-          <span>☃</span>
-          <small>NORTH POLE</small>
-        </div>
-
-        <header class="hero">
-          <div class="mascot-ring">
-            <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true"><use href="#snowman-mascot" width="96" height="96" /></svg>
-          </div>
-        </header>
-
-        <p class="label">You are buying a gift for</p>
-        <div class="match-wrap">
-          <p id="match">…</p>
-          <div class="seal" aria-hidden="true">❄</div>
-        </div>
-
-        <div class="letter" id="letter" hidden>
-          <h2>Their little hints</h2>
-          <p id="hint-text"></p>
-        </div>
-
-        <p class="rules" id="reveal-rules">
-          <span>🎁 $20 max</span>
-          <span id="reveal-day" hidden></span>
-        </p>
-        <p class="actions" style="margin-top:22px; justify-content:center">
-          <button id="start-over" class="secondary">Start over ✨</button>
-        </p>
+        <div id="view" aria-live="polite"></div>
 
         <div class="knit-band" aria-hidden="true"></div>
       </section>
@@ -1105,6 +1636,247 @@
         </p>
       </footer>
     </main>
+
+    <!-- ═════════════════════════════  views  ═════════════════════════════ -->
+
+    <template id="tpl-person">
+      <label class="field">
+        <span>Your name <small>what the group calls you</small></span>
+        <input name="name" type="text" required maxlength="40" autocomplete="nickname" />
+      </label>
+      <label class="field">
+        <span>Your wishlist <small>ideas for your Secret Santa</small></span>
+        <textarea name="wishlist" maxlength="1000" placeholder="e.g. a drawing of my cat Mochi · Steam gift card · anything with frogs"></textarea>
+      </label>
+      <div class="field">
+        <span>I'd love…</span>
+        <div class="choice">
+          <label><input type="radio" name="giftPref" value="handmade" /><span>🎨 Something handmade</span></label>
+          <label><input type="radio" name="giftPref" value="digital" /><span>💳 A digital gift</span></label>
+          <label><input type="radio" name="giftPref" value="either" checked /><span>✨ Either!</span></label>
+        </div>
+      </div>
+    </template>
+
+    <template id="tpl-home">
+      <p class="rules">
+        <span>🎁 $20 max</span>
+        <span>✨ digital or handmade</span>
+        <span>💌 no addresses, no emails</span>
+      </p>
+      <ol class="steps">
+        <li><b>1</b> everyone joins</li>
+        <li><b>2</b> names get drawn</li>
+        <li><b>3</b> send your gift</li>
+      </ol>
+      <div class="band" aria-hidden="true"></div>
+
+      <div class="my-groups" data-my-groups hidden>
+        <h2 class="section-title">Your groups on this device</h2>
+        <ul data-list></ul>
+      </div>
+
+      <form data-create class="stack" novalidate>
+        <h2 class="section-title">Start a group</h2>
+        <fieldset>
+          <legend>The group</legend>
+          <label class="field">
+            <span>Group name</span>
+            <input name="title" type="text" required maxlength="60" placeholder="e.g. The Discord Holiday Crew" />
+          </label>
+          <label class="field">
+            <span>Gift day <small>gifts unwrap that morning</small></span>
+            <input name="giftDay" type="date" />
+          </label>
+        </fieldset>
+        <fieldset data-person>
+          <legend>About you</legend>
+        </fieldset>
+        <p class="actions"><button type="submit">Start the group 🎄</button></p>
+        <p class="status" data-status role="status"></p>
+      </form>
+    </template>
+
+    <template id="tpl-join">
+      <div class="invite">
+        <p class="eyebrow">You're invited to join</p>
+        <h2 class="group-name" data-title></h2>
+        <p class="meta" data-meta></p>
+      </div>
+      <p class="rules">
+        <span>🎁 $20 max</span>
+        <span>✨ digital or handmade</span>
+        <span>💌 no addresses, no emails</span>
+      </p>
+      <div class="who">
+        <h3 class="panel-title">Already in <span class="count" data-count></span></h3>
+        <ul class="chips" data-names></ul>
+      </div>
+      <p class="callout" data-closed hidden>
+        Names have already been drawn for this group, so it's closed to new people. If you already joined, open your
+        own private link instead.
+      </p>
+      <form data-join class="stack" novalidate>
+        <fieldset data-person>
+          <legend>About you</legend>
+        </fieldset>
+        <p class="actions"><button type="submit">Join the group ✨</button></p>
+        <p class="status" data-status role="status"></p>
+      </form>
+    </template>
+
+    <template id="tpl-me">
+      <div class="invite">
+        <p class="eyebrow">Hi <b data-name></b>! Welcome to</p>
+        <h2 class="group-name" data-title></h2>
+        <p class="meta" data-meta></p>
+      </div>
+
+      <div class="callout gold save-link" data-fresh hidden>
+        <h3>📌 Save your private link first</h3>
+        <p>
+          It's how you get back in, and the only key to your match and your gifts. There's no password or email,
+          so if it's lost nobody can recover it.
+        </p>
+        <div class="copy-row">
+          <input type="text" readonly data-private-link aria-label="Your private link" />
+          <button type="button" class="small" data-copy-private>Copy</button>
+        </div>
+        <p class="small">Paste it into your notes or bookmark this page. It's also remembered on this device.</p>
+        <p class="actions"><button type="button" class="secondary small" data-saved>I've saved it ✓</button></p>
+      </div>
+
+      <section class="panel" data-lobby hidden>
+        <h3 class="panel-title">🎄 Who's in <span class="count" data-count></span></h3>
+        <ul class="chips" data-people></ul>
+        <div class="share">
+          <p>Invite friends with this link:</p>
+          <div class="copy-row">
+            <input type="text" readonly data-join-link aria-label="Join link" />
+            <button type="button" class="small" data-copy-join>Copy</button>
+          </div>
+        </div>
+        <div class="draw-box" data-owner-draw hidden>
+          <p>
+            When everyone's in, draw the names. Nobody can join after that, and nobody (not even you) ever sees the
+            full list.
+          </p>
+          <p class="actions"><button type="button" data-draw>Draw names 🎲</button></p>
+          <p class="status" data-draw-status role="status"></p>
+        </div>
+        <p class="muted" data-waiting hidden>
+          Waiting for <b data-owner></b> to draw names once everyone's joined. This page updates by itself.
+        </p>
+      </section>
+
+      <section class="panel match-panel" data-match hidden>
+        <button type="button" class="envelope" data-envelope>
+          <span class="envelope-flap" aria-hidden="true"></span>
+          <span class="envelope-seal" aria-hidden="true">❄</span>
+          <span class="envelope-label">Names are drawn! Tap to open your envelope</span>
+        </button>
+        <div class="match-card" data-match-card hidden>
+          <p class="label">You're the Secret Santa for</p>
+          <div class="match-wrap">
+            <p id="match" data-match-name></p>
+            <div class="seal" aria-hidden="true">❄</div>
+          </div>
+          <div class="letter">
+            <h2>Their wishlist</h2>
+            <p data-match-wish></p>
+            <p class="pref" data-match-pref></p>
+          </div>
+          <p class="rules"><span>🎁 $20 max</span><span data-giftday hidden></span></p>
+        </div>
+        <p class="callout" data-match-error hidden></p>
+      </section>
+
+      <section class="panel" data-send hidden>
+        <h3 class="panel-title">🎁 Send your gift</h3>
+        <p class="muted">
+          It arrives anonymously, so <b data-to></b> won't know it's from you unless you sign your note. It stays
+          wrapped until gift day.
+        </p>
+        <div class="tabs" role="tablist" aria-label="Kind of gift">
+          <button type="button" role="tab" data-kind="giftcard" aria-selected="true">💳 Gift card</button>
+          <button type="button" role="tab" data-kind="art" aria-selected="false">🎨 Drawing</button>
+          <button type="button" role="tab" data-kind="note" aria-selected="false">💌 Just a note</button>
+        </div>
+        <form data-gift class="stack" novalidate>
+          <div class="stack" data-for="giftcard">
+            <div class="two">
+              <label class="field"><span>Store</span><input name="store" type="text" maxlength="60" placeholder="Steam, Amazon, Starbucks…" /></label>
+              <label class="field"><span>Amount ($)</span><input name="amount" type="text" inputmode="decimal" maxlength="12" placeholder="20" /></label>
+            </div>
+            <p class="warn" data-cap-warn hidden>That's over the group's $20 limit. Keep it at $20 or less so it's fair for everyone.</p>
+            <label class="field"><span>Gift card code</span><input name="code" type="text" maxlength="300" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX" /></label>
+            <label class="field"><span>…or redeem link</span><input name="link" type="url" maxlength="500" placeholder="https://" /></label>
+          </div>
+          <div class="stack" data-for="art" hidden>
+            <label class="field file-field">
+              <span>Your drawing <small>it gets shrunk to a nice size</small></span>
+              <input name="image" type="file" accept="image/*" />
+            </label>
+            <img class="art-preview" data-preview alt="Preview of your drawing" hidden />
+            <label class="field"><span>…or a link to it</span><input name="artLink" type="url" maxlength="500" placeholder="https://" /></label>
+          </div>
+          <label class="field">
+            <span>Note <small data-note-hint>optional</small></span>
+            <textarea name="message" maxlength="1500" placeholder="Merry Christmas! ❄️"></textarea>
+          </label>
+          <p class="actions"><button type="submit">Wrap &amp; send 🎀</button></p>
+          <p class="status" data-gift-status role="status"></p>
+        </form>
+        <div class="sent" data-sent hidden>
+          <h4>Sent so far</h4>
+          <ul class="gift-list" data-sent-list></ul>
+        </div>
+      </section>
+
+      <section class="panel" data-inbox hidden>
+        <h3 class="panel-title">🎄 Under your tree</h3>
+        <p class="muted" data-inbox-note></p>
+        <ul class="gift-list" data-inbox-list></ul>
+      </section>
+
+      <details class="panel fold" data-edit>
+        <summary>✏️ Your wishlist</summary>
+        <form data-wish class="stack" novalidate>
+          <label class="field">
+            <span>Wishlist</span>
+            <textarea name="wishlist" maxlength="1000"></textarea>
+          </label>
+          <div class="field">
+            <span>I'd love…</span>
+            <div class="choice">
+              <label><input type="radio" name="giftPref" value="handmade" /><span>🎨 Something handmade</span></label>
+              <label><input type="radio" name="giftPref" value="digital" /><span>💳 A digital gift</span></label>
+              <label><input type="radio" name="giftPref" value="either" /><span>✨ Either!</span></label>
+            </div>
+          </div>
+          <p class="actions"><button type="submit" class="secondary small">Save wishlist</button></p>
+          <p class="status" data-wish-status role="status"></p>
+        </form>
+      </details>
+
+      <details class="panel fold" data-keybox>
+        <summary>🔑 Your private link</summary>
+        <p class="small">Keep this to yourself. Anyone with it can see your match and your gifts.</p>
+        <div class="copy-row">
+          <input type="text" readonly data-private-link aria-label="Your private link" />
+          <button type="button" class="small" data-copy-private>Copy</button>
+        </div>
+        <p class="actions">
+          <button type="button" class="secondary small" data-refresh>↻ Refresh</button>
+          <button type="button" class="secondary small" data-forget>Forget on this device</button>
+        </p>
+      </details>
+    </template>
+
+    <template id="tpl-message">
+      <div class="callout" data-text></div>
+      <p class="actions center"><a class="button secondary" href="#/">Go to the start ✨</a></p>
+    </template>
 
     <script type="module" src="./src/ui.js"></script>
   </body>
