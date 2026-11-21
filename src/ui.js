@@ -26,6 +26,7 @@ let audioCtx = null;
 let master = null;
 let soundOn = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let lastTone = 0;
+let soundToggle = null;
 
 function ensureAudio() {
   if (audioCtx) return true;
@@ -38,9 +39,21 @@ function ensureAudio() {
   return true;
 }
 
+function paintSound() {
+  if (!soundToggle) return;
+  const running = Boolean(audioCtx && audioCtx.state === "running");
+  soundToggle.textContent = !soundOn ? "Sound off" : running ? "Sound on" : "Click for sound";
+  soundToggle.setAttribute("aria-pressed", String(soundOn));
+  soundToggle.classList.toggle("off", !soundOn);
+}
+
 function unlockAudio() {
   if (!soundOn || !ensureAudio()) return;
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume().then(paintSound).catch(() => {});
+  } else {
+    paintSound();
+  }
 }
 
 function blip(freq, { to = null, when = 0, dur = 0.14, gain = 0.05, type = "sine" } = {}) {
@@ -85,28 +98,36 @@ function playSound(name) {
   (SOUNDS[name] || SOUNDS.pop)();
 }
 
+const HOVER_SELECTOR =
+  ".mascot-ring, .mascot, .bulb, .mug, .sparkle, .title-rule i, .rules span, .steps li, .corners svg, button";
+
 function soundFor(el) {
-  if (el.matches(".mascot-ring, .mascot, .mug")) return "chime";
-  if (el.matches(".bulb")) return "twinkle";
+  if (el.matches(".mascot-ring, .mascot, .mug, .corners svg")) return "chime";
+  if (el.matches(".bulb, .sparkle, .title-rule i")) return "twinkle";
   return "pop";
 }
 
 function setupSound() {
-  const toggle = $("#sound-toggle");
-  if (!toggle) return;
+  soundToggle = $("#sound-toggle");
+  if (!soundToggle) return;
 
-  const paint = () => {
-    toggle.textContent = soundOn ? "Sound on" : "Sound off";
-    toggle.setAttribute("aria-pressed", String(soundOn));
-    toggle.classList.toggle("off", !soundOn);
-  };
-
-  toggle.addEventListener("click", () => {
-    soundOn = !soundOn;
-    if (soundOn) unlockAudio();
-    paint();
+  soundToggle.addEventListener("click", () => {
+    const running = Boolean(audioCtx && audioCtx.state === "running");
+    soundOn = running ? !soundOn : true;
+    if (soundOn) {
+      unlockAudio();
+      if (audioCtx) {
+        audioCtx.resume()
+          .then(() => {
+            lastTone = 0;
+            playSound("chime");
+          })
+          .catch(() => {});
+      }
+    }
+    paintSound();
   });
-  paint();
+  paintSound();
 
   for (const ev of ["pointerdown", "keydown", "touchstart"]) {
     window.addEventListener(ev, unlockAudio, { passive: true, once: true });
@@ -116,7 +137,7 @@ function setupSound() {
     "pointerover",
     (event) => {
       if (event.pointerType === "touch") return;
-      const target = event.target.closest(".mascot-ring, .mascot, .bulb, .mug, button");
+      const target = event.target.closest(HOVER_SELECTOR);
       if (!target) return;
       if (event.relatedTarget && target.contains(event.relatedTarget)) return;
       playSound(soundFor(target));
