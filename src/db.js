@@ -53,6 +53,7 @@ export function supabaseBackend(url, key) {
       rpc("santa_send_gift", { p_token: token, p_recipient_id: recipientId, p_sealed: sealed }),
     unsendGift: (token, giftId) => rpc("santa_unsend_gift", { p_token: token, p_gift_id: giftId }),
     openGift: (token, giftId) => rpc("santa_open_gift", { p_token: token, p_gift_id: giftId }),
+    deleteEvent: (token) => rpc("santa_delete_event", { p_token: token }),
   };
 }
 
@@ -231,6 +232,18 @@ export function demoBackend(storage, now = () => new Date()) {
       const m = await me(db, token);
       const g = db.gifts.find((x) => x.id === giftId && x.recipient_id === m.id);
       if (g && !g.opened_at) { g.opened_at = now().toISOString(); save(db); }
+    },
+    async deleteEvent(token) {
+      const db = load();
+      const m = await me(db, token);
+      const ev = eventOf(db, m);
+      if (ev.owner_id !== m.id) fail("Only the person who started the group can delete it.");
+      const gone = new Set(db.participants.filter((p) => p.event_id === ev.id).map((p) => p.id));
+      db.events = db.events.filter((e) => e.id !== ev.id);
+      db.participants = db.participants.filter((p) => !gone.has(p.id));
+      db.assignments = db.assignments.filter((a) => a.event_id !== ev.id);
+      db.gifts = db.gifts.filter((g) => g.event_id !== ev.id);
+      save(db);
     },
   };
 }

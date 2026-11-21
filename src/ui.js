@@ -152,7 +152,19 @@ function renderHome() {
     $("[data-my-groups]", frag).hidden = false;
     const list = $("[data-list]", frag);
     for (const g of mine) {
-      list.append(el("li", {}, el("a", { href: g.fragment }, el("b", {}, g.title), ` · as ${g.name}`)));
+      const x = el("button", { type: "button", class: "chip-x", "aria-label": `Remove ${g.title} from this device` }, "✕");
+      const li = el("li", {}, el("a", { href: g.fragment }, el("b", {}, g.title), ` · as ${g.name}`), x);
+      x.addEventListener("click", () => {
+        if (!x.dataset.armed) {
+          x.dataset.armed = "1";
+          x.textContent = "remove?";
+          return;
+        }
+        forgetGroup(g.fragment);
+        li.remove();
+        if (!list.children.length) $("[data-my-groups]").hidden = true;
+      });
+      list.append(li);
     }
   }
 
@@ -232,7 +244,16 @@ async function renderMe(fragment, { quiet = false } = {}) {
   try {
     state = await loadMe(db, secret);
   } catch (err) {
-    return showMessage(err.message);
+    const saved = savedGroups().some((g) => g.fragment === fragment);
+    showMessage(saved && /not valid/.test(err.message)
+      ? "This group doesn't exist anymore. It may have been deleted by the person who started it."
+      : err.message);
+    if (saved) {
+      const b = el("button", { type: "button", class: "secondary" }, "Remove it from this device");
+      b.addEventListener("click", () => { forgetGroup(fragment); location.hash = "#/"; });
+      $(".actions", view).prepend(b);
+    }
+    return;
   }
   const { event, me } = state;
   rememberGroup({ fragment, title: event.title, name: me.name });
@@ -258,6 +279,7 @@ async function renderMe(fragment, { quiet = false } = {}) {
   else fillDrawn(frag, state, secret, fragment);
   fillWishEditor(frag, state, secret);
 
+  if (me.is_owner) fillSettings(frag, state, secret, fragment);
   $("[data-refresh]", frag).addEventListener("click", () => renderMe(fragment));
   $("[data-forget]", frag).addEventListener("click", (e) => {
     const b = e.currentTarget;
@@ -550,6 +572,28 @@ function giftCard(g, secret, fragment) {
   body.append(el("p", { class: "from" }, "— your Secret Santa ❄️"));
   li.append(body);
   return li;
+}
+
+function fillSettings(frag, state, secret, fragment) {
+  const box = $("[data-settings]", frag);
+  box.hidden = false;
+  const button = $("[data-delete]", box);
+  const status = $("[data-delete-status]", box);
+  button.addEventListener("click", async () => {
+    if (!button.dataset.armed) {
+      button.dataset.armed = "1";
+      button.textContent = `Really delete "${state.event.title}" for everyone? Tap again`;
+      return;
+    }
+    try {
+      await busy(button, "Deleting…", () => db.deleteEvent(secret.token));
+      forgetGroup(fragment);
+      clearTimeout(pollTimer);
+      showMessage(`"${state.event.title}" has been deleted. 🧹`);
+    } catch (err) {
+      setStatus(status, err.message, true);
+    }
+  });
 }
 
 function fillWishEditor(frag, state, secret) {

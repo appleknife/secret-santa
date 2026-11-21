@@ -343,6 +343,19 @@ begin
    where id = p_gift_id and recipient_id = m.id;
 end $$;
 
+-- The group starter can delete the whole group: everyone, matches and gifts.
+create or replace function public.santa_delete_event(p_token text)
+returns void language plpgsql security definer set search_path = '' as $$
+declare m santa.participants; v santa.events;
+begin
+  m := santa.me(p_token);
+  select * into v from santa.events where id = m.event_id for update;
+  if v.owner_id is distinct from m.id then
+    raise exception 'Only the person who started the group can delete it.' using errcode = 'P0001';
+  end if;
+  delete from santa.events where id = v.id;
+end $$;
+
 -- lock every function down, then open exactly the API to the website roles
 do $$
 declare f text;
@@ -357,7 +370,8 @@ begin
     'santa_submit_draw(text,jsonb)',
     'santa_send_gift(text,uuid,text)',
     'santa_unsend_gift(text,uuid)',
-    'santa_open_gift(text,uuid)'
+    'santa_open_gift(text,uuid)',
+    'santa_delete_event(text)'
   ] loop
     execute format('revoke all on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated', f);

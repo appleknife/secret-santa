@@ -1274,6 +1274,11 @@
       }
       .my-groups a:hover { border-left-color: var(--cranberry); background: #fff; }
       .my-groups b { font-family: var(--display); font-weight: 600; color: var(--pine-dark); }
+      .my-groups li { display: flex; align-items: stretch; gap: 6px; }
+      .my-groups li a { flex: 1; min-width: 0; }
+      .my-groups .chip-x { align-self: center; }
+      button.danger-btn { background-image: linear-gradient(180deg, #8f2430, #5e1620); }
+      details.danger summary { color: var(--cranberry-deep); }
 
       /* the envelope */
       .match-panel { text-align: center; }
@@ -1870,6 +1875,16 @@
           <button type="button" class="secondary small" data-refresh>↻ Refresh</button>
           <button type="button" class="secondary small" data-forget>Forget on this device</button>
         </p>
+      </details>
+
+      <details class="panel fold danger" data-settings hidden>
+        <summary>⚙️ Group settings</summary>
+        <p class="small">
+          Only you see this, because you started the group. Deleting removes everyone, the drawn names and all
+          gifts for good. Handy for clearing out test groups, or starting over if something went wrong.
+        </p>
+        <p class="actions"><button type="button" class="small danger-btn" data-delete>Delete this group</button></p>
+        <p class="status" data-delete-status role="status"></p>
       </details>
     </template>
 

@@ -112,3 +112,12 @@ test("$20 cap check", () => {
   assert.equal(overCap("19.99"), false);
   assert.equal(overCap(""), false);
 });
+
+test("only the group starter can delete the group, and it takes everything with it", async () => {
+  const { db, secrets, code } = await fivePals();
+  await drawNames(db, secrets[0]);
+  await assert.rejects(() => db.deleteEvent(secrets[1].token), /Only the person/);
+  await db.deleteEvent(secrets[0].token);
+  await assert.rejects(() => loadMe(db, secrets[2]), /not valid/);
+  await assert.rejects(() => db.eventPreview(code), /could not find/);
+});

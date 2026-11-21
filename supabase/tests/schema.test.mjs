@@ -152,3 +152,19 @@ test("unsend before opening works", async () => {
   await rpc("santa_unsend_gift", { p_token: t[1], p_gift_id: gid });
   assert.equal((await rpc("santa_my_event", { p_token: t[2] })).gifts_received.length, 0);
 });
+
+test("owner deletes the group; everything cascades", async () => {
+  const { rpc, db } = await fresh();
+  const { code, t } = await group(rpc, 3);
+  const ps = (await rpc("santa_my_event", { p_token: t[0] })).participants;
+  await rpc("santa_submit_draw", { p_token: t[0], p_rows: ps.map((p) => ({ giver_id: p.id, sealed: "x".repeat(40) })) });
+  await rpc("santa_send_gift", { p_token: t[1], p_recipient_id: ps[2].id, p_sealed: "g".repeat(30) });
+  await assert.rejects(() => rpc("santa_delete_event", { p_token: t[1] }), /Only the person/);
+  await rpc("santa_delete_event", { p_token: t[0] });
+  await assert.rejects(() => rpc("santa_event_preview", { p_code: code }), /could not find/);
+  await assert.rejects(() => rpc("santa_my_event", { p_token: t[2] }), /not valid/);
+  await db.exec("reset role;");
+  for (const tbl of ["events", "participants", "assignments", "gifts"]) {
+    assert.equal((await db.query(`select count(*)::int n from santa.${tbl}`)).rows[0].n, 0, tbl);
+  }
+});
