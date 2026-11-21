@@ -3,115 +3,277 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#eef6f0" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Ccircle%20cx='32'%20cy='42'%20r='17'%20fill='%23fffdfb'%20stroke='%23cfe3d6'%20stroke-width='3'/%3E%3Ccircle%20cx='32'%20cy='21'%20r='13'%20fill='%23fffdfb'%20stroke='%23cfe3d6'%20stroke-width='3'/%3E%3Cpath%20d='M21%2015c0-7%207-10%2014-6%203%201%204%204%203%206z'%20fill='%23e3a3b0'/%3E%3Crect%20x='19'%20y='13'%20width='26'%20height='5'%20rx='2.5'%20fill='%23d98a9a'/%3E%3Ccircle%20cx='27'%20cy='21'%20r='1.6'%20fill='%233f6855'/%3E%3Ccircle%20cx='37'%20cy='21'%20r='1.6'%20fill='%233f6855'/%3E%3Cpath%20d='M32%2024l5%202-5%201.6z'%20fill='%23e8a05c'/%3E%3C/svg%3E" />
-    <title>Secret Santa ✨ — a little holiday magic</title>
+    <meta name="theme-color" content="#fdf9f8" />
+    <meta
+      name="description"
+      content="A cosy, private Secret Santa organizer. Add your people, write little hints, and send everyone their own encrypted secret link."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Ccircle%20cx='32'%20cy='45'%20r='15'%20fill='%23fffdfb'%20stroke='%23cfe3d6'%20stroke-width='2.5'/%3E%3Ccircle%20cx='32'%20cy='24'%20r='12'%20fill='%23fffdfb'%20stroke='%23cfe3d6'%20stroke-width='2.5'/%3E%3Cpath%20d='M22%2018c0-7%206-11%2013-9%205%201%207%206%206%2010z'%20fill='%23e3a3b0'/%3E%3Crect%20x='21'%20y='16'%20width='24'%20height='5'%20rx='2.5'%20fill='%23d98a9a'/%3E%3Cpath%20d='M26%2034q6%204%2012%200'%20stroke='%23dfeaf5'%20stroke-width='4'%20fill='none'%20stroke-linecap='round'/%3E%3Ccircle%20cx='28'%20cy='23'%20r='1.5'%20fill='%233f6855'/%3E%3Ccircle%20cx='36'%20cy='23'%20r='1.5'%20fill='%233f6855'/%3E%3Cpath%20d='M32%2026l5%202-5%201.6z'%20fill='%23e8a05c'/%3E%3Ccircle%20cx='24'%20cy='28'%20r='2'%20fill='%23f6c6d0'/%3E%3Ccircle%20cx='40'%20cy='28'%20r='2'%20fill='%23f6c6d0'/%3E%3C/svg%3E"
+    />
+    <title>Secret Santa ✨ — a cosy little holiday ritual</title>
     <style>
+      /* ─────────────────────────────  tokens  ───────────────────────────── */
       :root {
         --cream: #fffaf9;
+        --paper: #fffdfb;
+        --vanilla: #fff8e1;
         --ink: #3c4a43;
+        --ink-soft: #637168;
+        --cocoa: #5b4436;
         --pine: #5b8b73;
         --pine-dark: #3f6855;
+        --sage: #cfe6d7;
+        --mint: #dff0e5;
+        --mint-deep: #c9e3d3;
         --berry: #e3a3b0;
         --berry-ink: #a35d70;
-        --gold: #e6c78d;
-        --mint: #dff0e5;
-        --blue: #dfeaf5;
-        --butter: #fbf0cd;
+        --berry-deep: #c9748a;
+        --rose: #fbe4ea;
         --soft: #f9edf1;
+        --gold: #e6c78d;
+        --gold-deep: #c9a15f;
+        --butter: #fbf0cd;
+        --candle: #f7e2a0;
+        --blue: #dfeaf5;
+        --ice: #eef5fb;
+        --kraft: #d8c4a8;
         --line: #e7dbe0;
+        --line-soft: #f1e6ea;
+
+        /* patterned paper tiles */
+        --flake-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104' viewBox='0 0 104 104'%3E%3Cg fill='none' stroke='%23cfe6d7' stroke-width='1.1' stroke-linecap='round' opacity='.7'%3E%3Cpath d='M52 18v68M18 52h68M28 28l48 48M76 28L28 76'/%3E%3Cpath d='M44 25l8 8 8-8M44 79l8-8 8 8M25 44l8 8-8 8M79 44l-8 8 8 8'/%3E%3Ccircle cx='52' cy='52' r='2.8'/%3E%3C/g%3E%3C/svg%3E");
+        --holly-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg opacity='.55'%3E%3Cg transform='translate(15 15)'%3E%3Cellipse cx='-6' cy='4' rx='8' ry='3.4' transform='rotate(-32 -6 4)' fill='%23dcefe3'/%3E%3Cellipse cx='6' cy='4' rx='8' ry='3.4' transform='rotate(32 6 4)' fill='%23dcefe3'/%3E%3Ccircle cx='0' cy='-3' r='2.2' fill='%23f2c9d3'/%3E%3Ccircle cx='-4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3Ccircle cx='4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3C/g%3E%3Cg transform='translate(49 49) rotate(180)'%3E%3Cellipse cx='-6' cy='4' rx='8' ry='3.4' transform='rotate(-32 -6 4)' fill='%23dcefe3'/%3E%3Cellipse cx='6' cy='4' rx='8' ry='3.4' transform='rotate(32 6 4)' fill='%23dcefe3'/%3E%3Ccircle cx='0' cy='-3' r='2.2' fill='%23f2c9d3'/%3E%3Ccircle cx='-4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3Ccircle cx='4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        --band-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='20' viewBox='0 0 48 20'%3E%3Cg fill='none' stroke='%23b9d8c6' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M0 3h48M0 17h48'/%3E%3Cpath d='M3 17l5-10 5 10M13 3l5 10 5-10M23 17l5-10 5 10M33 3l5 10 5-10M43 17l2-4 2 4'/%3E%3C/g%3E%3Cg fill='%23e3a3b0'%3E%3Ccircle cx='8' cy='10' r='1.4'/%3E%3Ccircle cx='32' cy='10' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
+        --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E");
+
+        --shadow-warm: 0 26px 60px rgba(112, 86, 96, .16);
         color-scheme: light;
       }
+
+      /* ─────────────────────────────  base  ───────────────────────────── */
       * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+      [hidden] { display: none !important; }
+
       body {
         margin: 0;
         min-height: 100vh;
+        padding: 50px 18px 74px;
         color: var(--ink);
         font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
         font-size: 16px;
         line-height: 1.65;
-        background:
-          radial-gradient(circle at 12% 9%, rgba(255,255,255,.9) 0 2px, transparent 3px),
-          radial-gradient(circle at 78% 21%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-          radial-gradient(circle at 44% 71%, rgba(255,255,255,.7) 0 2px, transparent 3px),
-          linear-gradient(165deg, var(--cream) 0%, var(--mint) 48%, var(--soft) 100%);
+        background-color: #fdf9f8;
+        background-image:
+          var(--flake-tile),
+          radial-gradient(circle at 1px 1px, rgba(227, 163, 176, .15) 1.4px, transparent 1.7px),
+          radial-gradient(circle at 50% -12%, rgba(255, 255, 255, .96), transparent 58%),
+          linear-gradient(160deg, #fffaf9 0%, #f3faf5 36%, #fdf1f5 70%, #eef5fb 100%);
+        background-size: 112px 112px, 26px 26px, auto, auto;
         background-attachment: fixed;
-        padding: 40px 18px 64px;
       }
-      body::before, body::after {
+
+      /* candlelit glows */
+      body::before,
+      body::after {
         content: "";
         position: fixed;
         z-index: 0;
         border-radius: 50%;
-        filter: blur(46px);
-        opacity: .55;
+        filter: blur(52px);
+        opacity: .62;
         pointer-events: none;
       }
       body::before {
-        width: 300px;
-        height: 300px;
-        top: -80px;
-        right: -70px;
+        width: 320px;
+        height: 320px;
+        top: -90px;
+        right: -80px;
         background: radial-gradient(circle, #f7d7e1, transparent 70%);
       }
       body::after {
-        width: 340px;
-        height: 340px;
-        bottom: -100px;
-        left: -80px;
+        width: 360px;
+        height: 360px;
+        bottom: -110px;
+        left: -90px;
         background: radial-gradient(circle, #cfead9, transparent 70%);
       }
+
+      /* paper grain over everything, like a printed card */
+      .grain {
+        position: fixed;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background-image: var(--grain-tile);
+        background-size: 180px 180px;
+        opacity: .045;
+        mix-blend-mode: multiply;
+      }
+
+      /* falling snow */
       .snow { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
       .snow i {
         position: absolute;
-        top: -20px;
+        top: -22px;
         left: var(--x);
         width: var(--size);
         height: var(--size);
         border-radius: 50%;
         background: #fff;
-        opacity: .75;
+        opacity: .8;
+        filter: blur(.2px);
         animation: fall var(--dur) linear var(--delay) infinite;
       }
       .snow i:nth-child(3n) { background: var(--blue); }
-      .snow i:nth-child(3n + 1) { background: var(--berry); opacity: .5; }
+      .snow i:nth-child(3n + 1) { background: var(--berry); opacity: .55; }
+      .snow i:nth-child(4n) { background: var(--candle); }
       @keyframes fall {
-        to { transform: translate(38px, 108vh); }
+        to { transform: translate(40px, 110vh); }
       }
-      @media (prefers-reduced-motion: reduce) {
-        .snow { display: none; }
+
+      main {
+        position: relative;
+        z-index: 1;
+        width: min(720px, 100%);
+        margin: 0 auto;
       }
-      main { position: relative; z-index: 1; width: min(720px, 100%); margin: 0 auto; }
+
+      /* ───────────────────────────  the card  ─────────────────────────── */
       .card {
-        background:
-          linear-gradient(180deg, #fffefd, #fffafc) padding-box,
-          linear-gradient(135deg, var(--mint), var(--butter) 35%, var(--soft) 65%, var(--blue)) border-box;
+        position: relative;
+        margin: 0 0 34px;
+        padding: 38px 36px 34px;
         border: 2px solid transparent;
         border-radius: 26px;
-        box-shadow: 0 22px 60px rgba(112, 86, 96, .14), inset 0 1px 0 rgba(255, 255, 255, .9);
-        padding: 32px 34px 36px;
+        background-image:
+          var(--holly-tile),
+          repeating-linear-gradient(135deg, rgba(163, 93, 112, .04) 0 1px, transparent 1px 11px),
+          linear-gradient(180deg, #fffefd, #fffafc),
+          linear-gradient(135deg, var(--mint), var(--butter) 35%, var(--soft) 65%, var(--blue));
+        background-size: 64px 64px, auto, auto, auto;
+        background-origin: border-box;
+        background-clip: padding-box, padding-box, padding-box, border-box;
+        box-shadow:
+          6px 6px 0 -1px #f6e3ea,
+          12px 12px 0 -2px #e6f1ea,
+          var(--shadow-warm);
         animation: card-pop .5s cubic-bezier(.2, .8, .25, 1) both;
       }
-      .hero { text-align: center; margin-bottom: 26px; }
-      .mascot {
-        width: 78px;
-        height: 78px;
-        margin-bottom: 2px;
-        filter: drop-shadow(0 8px 14px rgba(63, 104, 85, .14));
-        animation: bob 4.5s ease-in-out infinite;
+      /* stitched paper border */
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border: 1.5px dashed rgba(163, 93, 112, .2);
+        border-radius: 18px;
+        pointer-events: none;
       }
+      /* candy-stripe ribbon across the top */
+      .card::after {
+        content: "";
+        position: absolute;
+        top: -11px;
+        left: 42px;
+        right: 42px;
+        height: 22px;
+        border-radius: 999px;
+        background: repeating-linear-gradient(115deg, #fbe4ea 0 9px, #fffdfb 9px 18px);
+        box-shadow: 0 6px 14px rgba(163, 93, 112, .16), inset 0 -2px 0 rgba(163, 93, 112, .08);
+        pointer-events: none;
+      }
+
+      /* little snowflakes in the card corners */
+      .corners i {
+        position: absolute;
+        color: var(--mint-deep);
+        font-style: normal;
+        font-size: 12px;
+        opacity: .8;
+        pointer-events: none;
+      }
+      .corners i:nth-child(1) { top: 8px; left: 10px; }
+      .corners i:nth-child(2) { top: 8px; right: 10px; }
+      .corners i:nth-child(3) { bottom: 8px; left: 10px; }
+      .corners i:nth-child(4) { bottom: 8px; right: 10px; }
+
+      /* bow that ties the ribbon */
+      .bow {
+        position: absolute;
+        top: -32px;
+        left: 50%;
+        width: 68px;
+        transform: translateX(-50%) rotate(-3deg);
+        filter: drop-shadow(0 6px 8px rgba(163, 93, 112, .18));
+        pointer-events: none;
+      }
+
+      /* ─────────────────────────────  hero  ───────────────────────────── */
+      .hero { position: relative; text-align: center; margin-bottom: 22px; }
+
+      /* string lights */
+      .lights {
+        display: block;
+        width: min(360px, 100%);
+        margin: -10px auto 0;
+        overflow: visible;
+      }
+      .lights .bulb { filter: drop-shadow(0 0 5px rgba(247, 226, 160, .9)); }
+      @media (prefers-reduced-motion: no-preference) {
+        .lights .bulb { animation: glow 3.6s ease-in-out infinite; }
+        .lights g:nth-of-type(2) .bulb { animation-delay: .6s; }
+        .lights g:nth-of-type(3) .bulb { animation-delay: 1.2s; }
+        .lights g:nth-of-type(4) .bulb { animation-delay: 1.8s; }
+        .lights g:nth-of-type(5) .bulb { animation-delay: 2.4s; }
+      }
+
+      .mascot-ring {
+        position: relative;
+        display: inline-grid;
+        place-items: center;
+        width: 112px;
+        height: 112px;
+        margin: 2px auto 8px;
+        border: 1.5px dashed rgba(163, 93, 112, .3);
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 32%, #fff 0%, var(--vanilla) 46%, #eef7f2 100%);
+        box-shadow:
+          0 0 34px 6px rgba(247, 226, 160, .5),
+          0 14px 30px rgba(63, 104, 85, .14),
+          inset 0 0 0 1.5px rgba(255, 255, 255, .9);
+      }
+      .mascot-ring::before,
+      .mascot-ring::after {
+        content: "✦";
+        position: absolute;
+        color: var(--gold-deep);
+        font-size: 12px;
+        animation: twinkle 3.4s ease-in-out infinite;
+      }
+      .mascot-ring::before { top: 6px; left: 2px; }
+      .mascot-ring::after { bottom: 8px; right: 0; animation-delay: 1.4s; }
+
+      .mascot {
+        width: 86px;
+        height: 86px;
+        filter: drop-shadow(0 6px 10px rgba(63, 104, 85, .12));
+        animation: bob 4.8s ease-in-out infinite;
+      }
+
       h1 {
-        font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-        font-size: 42px;
+        margin: 0 0 4px;
+        font-size: 43px;
         font-weight: 800;
         line-height: 1.05;
-        margin: 0 0 10px;
-        color: var(--pine-dark);
         letter-spacing: .2px;
+        color: var(--pine-dark);
       }
       @supports (-webkit-background-clip: text) or (background-clip: text) {
         h1 {
-          background: linear-gradient(120deg, var(--pine-dark) 10%, #6f9d86 45%, var(--berry-ink) 90%);
+          background: linear-gradient(118deg, var(--pine-dark) 8%, #6f9d86 44%, var(--berry-ink) 92%);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
@@ -122,211 +284,646 @@
         display: inline-block;
         color: var(--gold);
         -webkit-text-fill-color: var(--gold);
-        font-size: .42em;
+        font-size: .4em;
         vertical-align: super;
         animation: twinkle 3s ease-in-out infinite;
       }
       .sparkle:last-child { animation-delay: 1.5s; }
-      .lede { color: #637168; margin: 0 auto 14px; max-width: 52ch; }
-      .hero::after {
-        content: "";
-        display: block;
-        height: 10px;
-        margin: 18px 0 0;
-        background-image:
-          radial-gradient(circle at center, var(--berry) 0 3px, transparent 4px),
-          radial-gradient(circle at center, var(--blue) 0 3px, transparent 4px),
-          radial-gradient(circle at center, var(--gold) 0 3px, transparent 4px);
-        background-size: 24px 10px;
-        background-position: 0 0, 8px 0, 16px 0;
-        background-repeat: repeat-x;
-        opacity: .8;
+
+      /* hand-drawn underline */
+      .title-rule {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: min(300px, 78%);
+        margin: 4px auto 12px;
       }
-      .rules { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 0; }
+      .title-rule span {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e7dbe0);
+      }
+      .title-rule span:last-child { background: linear-gradient(90deg, #e7dbe0, transparent); }
+      .title-rule i {
+        font-style: normal;
+        color: var(--gold-deep);
+        font-size: 11px;
+        letter-spacing: .35em;
+        text-indent: .35em;
+      }
+
+      .lede {
+        max-width: 52ch;
+        margin: 0 auto 14px;
+        color: var(--ink-soft);
+      }
+
+      /* washi-paper pills */
+      .rules {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin: 0;
+      }
       .rules span {
-        background: linear-gradient(180deg, #fff, var(--soft));
+        padding: 5px 13px;
         border: 1.5px solid #f1dfe6;
         border-radius: 999px;
-        padding: 5px 13px;
         font-size: 12px;
         font-weight: 700;
         color: var(--berry-ink);
-        box-shadow: 0 3px 8px rgba(163, 93, 112, .08);
+        background-image:
+          repeating-linear-gradient(115deg, rgba(227, 163, 176, .14) 0 5px, transparent 5px 11px),
+          linear-gradient(180deg, #fff, var(--soft));
+        box-shadow: 0 3px 8px rgba(163, 93, 112, .09);
       }
-      .rules span:nth-child(2) { background: linear-gradient(180deg, #fff, var(--mint)); color: var(--pine-dark); border-color: #cfe6d7; }
-      .rules span:nth-child(3) { background: linear-gradient(180deg, #fff, var(--blue)); color: #54728a; border-color: #d3e3f1; }
-      fieldset {
-        border: 1.5px solid #efe3e7;
-        border-radius: 18px;
-        padding: 15px 17px 17px;
-        margin: 0 0 16px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, .88), rgba(255, 251, 252, .72));
-      }
-      legend {
-        padding: 0 10px;
+      .rules span:nth-child(2) {
+        border-color: #cfe6d7;
         color: var(--pine-dark);
-        font-size: 13px;
+        background-image:
+          repeating-linear-gradient(115deg, rgba(91, 139, 115, .13) 0 5px, transparent 5px 11px),
+          linear-gradient(180deg, #fff, var(--mint));
+      }
+      .rules span:nth-child(3) {
+        border-color: #d3e3f1;
+        color: #54728a;
+        background-image:
+          repeating-linear-gradient(115deg, rgba(86, 120, 150, .12) 0 5px, transparent 5px 11px),
+          linear-gradient(180deg, #fff, var(--blue));
+      }
+
+      /* three little steps, like a recipe card */
+      .steps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        justify-content: center;
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .steps li {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 12px 4px 5px;
+        border: 1px dashed #e8d8de;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .72);
+        font-size: 12.5px;
+        color: #63716a;
+      }
+      .steps b {
+        display: grid;
+        place-items: center;
+        width: 21px;
+        height: 21px;
+        border: 1px solid var(--sage);
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fff, var(--mint));
+        color: var(--pine-dark);
+        font-size: 11px;
+      }
+      .steps li:nth-child(2) b { border-color: #f0dfe5; background: linear-gradient(135deg, #fff, var(--rose)); color: var(--berry-ink); }
+      .steps li:nth-child(3) b { border-color: #d3e3f1; background: linear-gradient(135deg, #fff, var(--blue)); color: #54728a; }
+
+      /* fair-isle divider band */
+      .band {
+        height: 20px;
+        margin: 4px 0 20px;
+        background-image: var(--band-tile);
+        background-repeat: repeat-x;
+        background-position: center;
+        background-size: 48px 20px;
+        opacity: .95;
+      }
+
+      /* ──────────────────────────  form pieces  ────────────────────────── */
+      fieldset {
+        position: relative;
+        margin: 0 0 16px;
+        padding: 16px 16px 16px;
+        border: 1.5px solid #efe0e6;
+        border-radius: 15px 19px 14px 18px;
+        background-image:
+          repeating-linear-gradient(135deg, rgba(163, 93, 112, .03) 0 1px, transparent 1px 9px),
+          linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(255, 250, 252, .8));
+        box-shadow: 0 6px 16px rgba(112, 86, 96, .05), inset 0 1px 0 #fff;
+      }
+      /* stitched inner line */
+      fieldset::before {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border: 1px dashed rgba(163, 93, 112, .16);
+        border-radius: 11px 14px 10px 13px;
+        pointer-events: none;
+      }
+      /* tiny holly in the corner */
+      fieldset::after {
+        content: "";
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        width: 34px;
+        height: 34px;
+        background-image: var(--holly-tile);
+        background-size: 44px 44px;
+        opacity: .5;
+        pointer-events: none;
+      }
+
+      legend {
+        margin-left: 4px;
+        padding: 3px 12px;
+        border: 1px solid #f0dfe5;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #fff, #fdf4f7);
+        color: var(--pine-dark);
+        font-size: 12.5px;
         font-weight: 800;
         letter-spacing: .2px;
+        box-shadow: 0 2px 6px rgba(163, 93, 112, .07);
       }
-      legend::before { content: "✦ "; color: var(--gold); }
-      textarea, input[type="text"], input[type="date"] {
+      legend::before { content: "✦ "; color: var(--gold-deep); }
+
+      textarea,
+      input[type="text"],
+      input[type="date"] {
         width: 100%;
-        background: #fffafc;
-        color: var(--ink);
+        padding: 11px 14px;
         border: 1.5px solid #ece0e5;
         border-radius: 14px;
-        padding: 11px 14px;
+        background-color: #fffafc;
+        background-image: linear-gradient(180deg, #fffdfd, #fff8fb);
+        color: var(--ink);
         font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
         font-size: 14px;
         line-height: 1.5;
+        box-shadow: inset 0 1px 3px rgba(112, 86, 96, .05);
         transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
       }
-      textarea { min-height: 88px; resize: vertical; font-family: ui-monospace, Consolas, monospace; }
-      input:focus, textarea:focus {
+      textarea {
+        min-height: 92px;
+        resize: vertical;
+        font-family: ui-monospace, Consolas, monospace;
+        background-image:
+          repeating-linear-gradient(180deg, transparent 0 26px, rgba(231, 219, 224, .5) 26px 27px);
+        background-position: 0 12px;
+      }
+      input:focus,
+      textarea:focus {
         outline: none;
         border-color: var(--pine);
-        box-shadow: 0 0 0 4px rgba(91, 139, 115, .14);
-        background: #fff;
+        background-color: #fff;
+        box-shadow: 0 0 0 4px rgba(91, 139, 115, .15), inset 0 1px 2px rgba(112, 86, 96, .04);
       }
-      .wish-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
-      .wish-row span { flex: 0 0 116px; font-weight: 600; color: var(--pine-dark); overflow: hidden; text-overflow: ellipsis; }
-      .wish-row input { flex: 1; min-width: 0; }
-      .hint { color: #7d8a82; font-size: 13px; margin: 2px 0 0; }
+
       .date-row { display: flex; align-items: center; gap: 12px; }
-      .date-row input { flex: 1; }
+      .date-row label { font-size: 14px; font-weight: 600; color: var(--pine-dark); }
+      .date-row input { flex: 1; min-width: 0; }
+
+      .wish-row { display: flex; align-items: center; gap: 12px; margin: 9px 0; }
+      .wish-row span {
+        flex: 0 0 118px;
+        font-weight: 600;
+        color: var(--pine-dark);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .wish-row input { flex: 1; min-width: 0; }
+
+      .hint { margin: 2px 0 0; color: #7d8a82; font-size: 13px; }
+      .hint::before { content: "✎ "; color: var(--gold-deep); }
+
+      /* ─────────────────────────────  buttons  ───────────────────────────── */
       button {
-        background: linear-gradient(135deg, #7fb298, #4f7c65);
-        color: #fff;
+        padding: 13px 24px;
         border: 0;
         border-radius: 999px;
-        padding: 13px 24px;
+        color: #fff;
         font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
         font-size: 15px;
         font-weight: 800;
         line-height: 1;
         cursor: pointer;
-        box-shadow: 0 10px 22px rgba(63, 104, 85, .22);
+        background-image:
+          repeating-linear-gradient(115deg, rgba(255, 255, 255, .16) 0 6px, transparent 6px 13px),
+          linear-gradient(135deg, #7fb298, #4f7c65);
+        box-shadow: 0 10px 22px rgba(63, 104, 85, .22), inset 0 1px 0 rgba(255, 255, 255, .35);
         transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
       }
-      button:hover { transform: translateY(-2px) scale(1.015); box-shadow: 0 14px 28px rgba(63, 104, 85, .26); filter: saturate(1.05); }
-      button:active { transform: translateY(0) scale(.99); box-shadow: 0 6px 14px rgba(63, 104, 85, .2); }
+      button:hover {
+        transform: translateY(-2px) scale(1.015);
+        box-shadow: 0 14px 28px rgba(63, 104, 85, .26), inset 0 1px 0 rgba(255, 255, 255, .4);
+        filter: saturate(1.05);
+      }
+      button:active {
+        transform: translateY(0) scale(.99);
+        box-shadow: 0 6px 14px rgba(63, 104, 85, .2);
+      }
+      button:focus-visible {
+        outline: 3px solid rgba(227, 163, 176, .7);
+        outline-offset: 3px;
+      }
       button.secondary {
-        background: linear-gradient(135deg, #fff, #f8edf2);
         color: var(--berry-ink);
         border: 1.5px solid #f0dfe5;
-        box-shadow: 0 6px 14px rgba(163, 93, 112, .08);
+        background-image:
+          repeating-linear-gradient(115deg, rgba(227, 163, 176, .1) 0 6px, transparent 6px 14px),
+          linear-gradient(135deg, #fff, #f8edf2);
+        box-shadow: 0 6px 14px rgba(163, 93, 112, .09), inset 0 1px 0 #fff;
       }
       button.small { padding: 8px 14px; font-size: 13px; }
+
       .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-      .status { color: #637168; font-size: 14px; margin: 14px 0 0; }
+      .status { margin: 14px 0 0; color: var(--ink-soft); font-size: 14px; }
+      .status:not(:empty)::before { content: "✦ "; color: var(--gold-deep); }
       .status.error { color: var(--berry-ink); font-weight: 700; }
-      table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin-top: 18px; }
+
+      /* ────────────────────────────  results  ──────────────────────────── */
+      table {
+        width: 100%;
+        margin-top: 18px;
+        border-collapse: separate;
+        border-spacing: 0 8px;
+      }
       td {
-        padding: 10px 8px;
+        padding: 11px 10px;
         vertical-align: middle;
-        background: rgba(255, 255, 255, .75);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #fff, #fffafc);
       }
-      td:first-child { border-left: 1px solid var(--line); border-radius: 12px 0 0 12px; }
-      td:last-child { border-right: 1px solid var(--line); border-radius: 0 12px 12px 0; text-align: right; width: 130px; }
-      tbody tr:nth-child(even) td { background: rgba(223, 240, 229, .55); }
-      tbody tr:hover td { background: rgba(249, 237, 241, .8); }
+      td:first-child {
+        border-left: 3px solid var(--rose);
+        border-radius: 14px 0 0 14px;
+        font-weight: 600;
+        color: var(--pine-dark);
+      }
+      /* punched gift-tag hole */
+      td:first-child::before {
+        content: "";
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        margin-right: 10px;
+        border-radius: 50%;
+        background: #fffdfb;
+        box-shadow: inset 0 0 0 1.5px #e9d5dd, 0 1px 0 #fff;
+        vertical-align: middle;
+      }
+      td:last-child {
+        width: 132px;
+        border-right: 1px solid var(--line);
+        border-radius: 0 14px 14px 0;
+        text-align: right;
+      }
+      tbody tr:nth-child(even) td { background: linear-gradient(180deg, #fff, #f4fbf6); }
+      tbody tr:nth-child(even) td:first-child { border-left-color: var(--mint-deep); }
+      tbody tr:hover td { background: linear-gradient(180deg, #fff, #fdf1f5); }
+
       .note {
-        color: #758078;
-        font-size: 13px;
         margin-top: 16px;
         padding-top: 14px;
         border-top: 1px dashed var(--line);
+        color: #758078;
+        font-size: 13px;
       }
+      .note::before { content: "🔒 "; }
+
+      /* ─────────────────────────────  reveal  ───────────────────────────── */
       #reveal { text-align: center; }
-      #reveal .label { color: #758078; font-size: 14px; margin: 0 0 8px; }
+      #reveal .hero { margin-bottom: 6px; }
+      #reveal .label { margin: 0 0 8px; color: #758078; font-size: 14px; }
+
+      .match-wrap {
+        position: relative;
+        display: inline-block;
+        margin: 0 0 18px;
+      }
       #match {
         display: inline-block;
-        font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        margin: 0;
+        padding: 8px 26px;
+        border: 1.5px dashed #ecc9d3;
+        border-radius: 20px;
+        color: var(--berry-ink);
         font-size: 40px;
         font-weight: 800;
         line-height: 1.15;
-        color: var(--berry-ink);
-        background: linear-gradient(135deg, #fff, #fff3f7);
-        border: 1.5px dashed #ecc9d3;
-        border-radius: 20px;
-        padding: 6px 24px;
-        box-shadow: 0 10px 24px rgba(163, 93, 112, .12);
-        margin: 0 0 18px;
         word-break: break-word;
+        background-image:
+          repeating-linear-gradient(135deg, rgba(227, 163, 176, .1) 0 10px, transparent 10px 20px),
+          linear-gradient(135deg, #fff, #fff3f7);
+        box-shadow: 0 10px 24px rgba(163, 93, 112, .13), inset 0 1px 0 #fff;
       }
+
+      /* wax seal */
+      .seal {
+        position: absolute;
+        top: -13px;
+        right: -16px;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 46% 54% 51% 49% / 52% 48% 55% 45%;
+        background: radial-gradient(circle at 34% 28%, #efbcc7, var(--berry-deep) 62%, #b3617a);
+        color: var(--vanilla);
+        font-size: 15px;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, .15);
+        box-shadow:
+          0 6px 12px rgba(163, 93, 112, .3),
+          inset 0 0 0 3px rgba(255, 255, 255, .18),
+          inset 0 -2px 4px rgba(120, 50, 70, .3);
+        transform: rotate(-9deg);
+      }
+
+      /* envelope letter with washi tape */
       .letter {
-        background: linear-gradient(135deg, #fffdfb, #fff6fa);
+        position: relative;
+        margin: 0 0 16px;
+        padding: 18px 20px 17px;
         border: 1.5px solid #f0dfe5;
         border-left: 6px solid var(--gold);
         border-radius: 16px;
-        padding: 16px 20px;
-        margin: 0 0 16px;
+        background-image:
+          repeating-linear-gradient(180deg, transparent 0 26px, rgba(231, 219, 224, .45) 26px 27px),
+          linear-gradient(135deg, #fffdfb, #fff6fa);
+        background-position: 0 14px, 0 0;
         text-align: left;
-        box-shadow: 0 8px 18px rgba(112, 86, 96, .07);
+        box-shadow: 0 8px 18px rgba(112, 86, 96, .08), inset 0 1px 0 #fff;
       }
-      .letter h2 { margin: 0 0 6px; font-size: 13px; color: var(--berry-ink); text-transform: uppercase; letter-spacing: .6px; }
+      .letter::before {
+        content: "";
+        position: absolute;
+        top: -9px;
+        left: 50%;
+        width: 88px;
+        height: 18px;
+        border-radius: 2px;
+        background: repeating-linear-gradient(135deg, #f7d7e1 0 8px, #fffdfb 8px 16px);
+        box-shadow: 0 2px 6px rgba(112, 86, 96, .08);
+        opacity: .95;
+        transform: translateX(-50%) rotate(-2deg);
+      }
+      .letter h2 {
+        margin: 0 0 6px;
+        color: var(--berry-ink);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+      }
       .letter p { margin: 0; color: #5a675e; }
+
+      /* postage stamp */
+      .stamp {
+        position: absolute;
+        top: 16px;
+        right: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        width: 64px;
+        height: 78px;
+        border: 1.5px dashed #e4c9d2;
+        border-radius: 8px;
+        background: radial-gradient(circle at 50% 36%, #fdf3f6, #fff);
+        color: var(--berry-ink);
+        box-shadow: 0 6px 14px rgba(163, 93, 112, .1);
+        transform: rotate(4deg);
+        pointer-events: none;
+      }
+      .stamp span { font-size: 27px; line-height: 1; }
+      .stamp small {
+        color: #b98d99;
+        font-size: 7.5px;
+        letter-spacing: .13em;
+        line-height: 1;
+      }
+
+      /* knit band at the bottom of the card */
+      .knit-band {
+        height: 22px;
+        margin: 22px 0 0;
+        border-top: 1px solid var(--line-soft);
+        border-bottom: 1px solid var(--line-soft);
+        background-image:
+          repeating-linear-gradient(115deg, rgba(227, 163, 176, .32) 0 4px, transparent 4px 9px),
+          repeating-linear-gradient(65deg, rgba(91, 139, 115, .26) 0 4px, transparent 4px 9px);
+        opacity: .9;
+      }
+
       .hidden { display: none !important; }
-      footer { text-align: center; color: #96a099; font-size: 12px; margin-top: 20px; letter-spacing: .2px; }
+
+      /* ─────────────────────────────  footer  ───────────────────────────── */
+      footer {
+        margin-top: 22px;
+        text-align: center;
+        color: #96a099;
+        font-size: 12px;
+        letter-spacing: .2px;
+      }
+      .knit-rule {
+        height: 12px;
+        margin: 0 auto 14px;
+        max-width: 280px;
+        background-image: var(--band-tile);
+        background-repeat: repeat-x;
+        background-position: center;
+        background-size: 38px 16px;
+        opacity: .6;
+      }
+      footer p {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0;
+      }
+      .mug {
+        width: 26px;
+        height: 24px;
+        flex: none;
+        transform: translateY(1px);
+      }
+
+      /* ────────────────────────────  motion  ──────────────────────────── */
       @keyframes card-pop {
         from { opacity: 0; transform: translateY(14px) scale(.99); }
         to { opacity: 1; transform: none; }
       }
       @keyframes bob {
-        0%, 100% { transform: translateY(0) rotate(-1deg); }
-        50% { transform: translateY(-5px) rotate(1deg); }
+        0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+        50% { transform: translateY(-5px) rotate(1.2deg); }
       }
       @keyframes twinkle {
-        0%, 100% { opacity: .5; transform: scale(.85) rotate(0); }
+        0%, 100% { opacity: .45; transform: scale(.85) rotate(0); }
         50% { opacity: 1; transform: scale(1.15) rotate(8deg); }
       }
-      @media (prefers-reduced-motion: reduce) {
-        .card, .mascot, .sparkle { animation: none; }
+      @keyframes glow {
+        0%, 100% { opacity: .78; }
+        50% { opacity: 1; }
       }
-      @media (max-width: 520px) {
-        .card { padding: 24px 18px 28px; border-radius: 22px; }
-        h1 { font-size: 32px; }
-        .mascot { width: 64px; height: 64px; }
-        .wish-row { align-items: stretch; flex-direction: column; gap: 2px; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .snow { display: none; }
+        .card,
+        .mascot,
+        .sparkle,
+        .mascot-ring::before,
+        .mascot-ring::after { animation: none; }
+        html { scroll-behavior: auto; }
+      }
+
+      /* ────────────────────────────  small screens  ──────────────────────────── */
+      @media (max-width: 560px) {
+        body { padding: 38px 12px 60px; }
+        .card {
+          padding: 30px 18px 28px;
+          border-radius: 22px;
+          box-shadow:
+            4px 4px 0 -1px #f6e3ea,
+            8px 8px 0 -2px #e6f1ea,
+            0 20px 44px rgba(112, 86, 96, .15);
+        }
+        .card::before { inset: 9px; border-radius: 15px; }
+        .card::after { top: -9px; left: 24px; right: 24px; height: 18px; }
+        .bow { top: -25px; width: 52px; }
+        h1 { font-size: 31px; }
+        .mascot-ring { width: 96px; height: 96px; }
+        .mascot { width: 74px; height: 74px; }
+        .steps li { font-size: 11.5px; padding: 3px 9px 3px 4px; }
+        .band { margin-bottom: 16px; }
+        .wish-row { flex-direction: column; align-items: stretch; gap: 2px; }
         .wish-row span { flex: none; }
-        #match { font-size: 30px; padding: 4px 16px; }
+        .stamp { display: none; }
+        #match { font-size: 29px; padding: 6px 17px; }
+        .seal { width: 34px; height: 34px; font-size: 13px; right: -8px; }
+        .letter { padding: 16px 14px; }
+        td:last-child { width: 100px; }
       }
     </style>
   </head>
   <body>
     <div id="snow" class="snow" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
 
     <main>
       <section id="organizer" class="card">
+        <div class="corners" aria-hidden="true"><i>❄</i><i>❄</i><i>❄</i><i>❄</i></div>
+
+        <svg class="bow" viewBox="0 0 80 46" aria-hidden="true">
+          <path d="M40 30C26 8 6 6 6 18c0 10 16 12 34 12z" fill="#f6c6d0" stroke="#d98a9a" stroke-width="1.4" />
+          <path d="M40 30C54 8 74 6 74 18c0 10-16 12-34 12z" fill="#fbe4ea" stroke="#d98a9a" stroke-width="1.4" />
+          <circle cx="40" cy="30" r="8" fill="#e3a3b0" stroke="#d98a9a" stroke-width="1.4" />
+          <circle cx="37.5" cy="27.5" r="2.4" fill="#fff" opacity=".55" />
+          <path d="M34 37l-5 9M46 37l5 9" stroke="#d98a9a" stroke-width="3.4" stroke-linecap="round" />
+        </svg>
+
         <header class="hero">
-          <svg class="mascot" viewBox="0 0 72 72" aria-hidden="true">
-            <circle cx="36" cy="52" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
-            <circle cx="36" cy="28" r="14" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
-            <path d="M23 21C23 11 32 5 41 8c6 2 8 8 7 13z" fill="#e3a3b0" />
-            <rect x="21" y="19" width="30" height="6" rx="3" fill="#d98a9a" />
-            <circle cx="49" cy="10" r="3.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
-            <circle cx="31" cy="26" r="1.7" fill="#3f6855" />
-            <circle cx="41" cy="26" r="1.7" fill="#3f6855" />
-            <path d="M36 30l7 3-7 2z" fill="#e8a05c" />
-            <circle cx="27" cy="32" r="2.6" fill="#f6c6d0" />
-            <circle cx="45" cy="32" r="2.6" fill="#f6c6d0" />
-            <path d="M32 35q4 3 8 0" fill="none" stroke="#3f6855" stroke-width="1.6" stroke-linecap="round" />
-            <path d="M24 40q12 7 24 0" fill="none" stroke="#dfeaf5" stroke-width="5" stroke-linecap="round" />
-            <circle cx="36" cy="48" r="1.5" fill="#cfe3d6" />
-            <circle cx="36" cy="55" r="1.5" fill="#cfe3d6" />
-            <path d="M19 48l-9-5M53 48l9-5" stroke="#b9d8c6" stroke-width="2" stroke-linecap="round" />
+          <svg class="lights" viewBox="0 0 360 64" aria-hidden="true">
+            <path
+              d="M4 8C64 46 122 50 180 34 238 50 296 46 356 8"
+              fill="none"
+              stroke="#cdb49c"
+              stroke-width="1.3"
+              stroke-linecap="round"
+            />
+            <g>
+              <path d="M46 33v5" stroke="#cdb49c" stroke-width="1.1" />
+              <rect x="43" y="38" width="6" height="3" rx="1.5" fill="#cdb49c" />
+              <circle cx="46" cy="45" r="8" fill="#f7d7e1" opacity=".25" />
+              <circle class="bulb" cx="46" cy="45" r="5" fill="#e3a3b0" />
+              <circle cx="44.4" cy="43.4" r="1.5" fill="#fff" opacity=".72" />
+            </g>
+            <g>
+              <path d="M105 46v5" stroke="#cdb49c" stroke-width="1.1" />
+              <rect x="102" y="51" width="6" height="3" rx="1.5" fill="#cdb49c" />
+              <circle cx="105" cy="58" r="8" fill="#fbf0cd" opacity=".4" />
+              <circle class="bulb" cx="105" cy="58" r="5" fill="#e6c78d" />
+              <circle cx="103.4" cy="56.4" r="1.5" fill="#fff" opacity=".72" />
+            </g>
+            <g>
+              <path d="M180 35v5" stroke="#cdb49c" stroke-width="1.1" />
+              <rect x="177" y="40" width="6" height="3" rx="1.5" fill="#cdb49c" />
+              <circle cx="180" cy="47" r="8" fill="#dff0e5" opacity=".5" />
+              <circle class="bulb" cx="180" cy="47" r="5" fill="#9ec9b0" />
+              <circle cx="178.4" cy="45.4" r="1.5" fill="#fff" opacity=".72" />
+            </g>
+            <g>
+              <path d="M255 46v5" stroke="#cdb49c" stroke-width="1.1" />
+              <rect x="252" y="51" width="6" height="3" rx="1.5" fill="#cdb49c" />
+              <circle cx="255" cy="58" r="8" fill="#dfeaf5" opacity=".5" />
+              <circle class="bulb" cx="255" cy="58" r="5" fill="#a8c6e0" />
+              <circle cx="253.4" cy="56.4" r="1.5" fill="#fff" opacity=".72" />
+            </g>
+            <g>
+              <path d="M312 33v5" stroke="#cdb49c" stroke-width="1.1" />
+              <rect x="309" y="38" width="6" height="3" rx="1.5" fill="#cdb49c" />
+              <circle cx="312" cy="45" r="8" fill="#f7d7e1" opacity=".25" />
+              <circle class="bulb" cx="312" cy="45" r="5" fill="#e3a3b0" />
+              <circle cx="310.4" cy="43.4" r="1.5" fill="#fff" opacity=".72" />
+            </g>
+            <g fill="#e6c78d" opacity=".85">
+              <path d="M150 18l1.4 3.7 3.7 1.4-3.7 1.4-1.4 3.7-1.4-3.7-3.7-1.4 3.7-1.4z" />
+              <path d="M288 24l1.1 2.9 2.9 1.1-2.9 1.1-1.1 2.9-1.1-2.9-2.9-1.1 2.9-1.1z" />
+            </g>
           </svg>
+
+          <div class="mascot-ring">
+            <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true">
+              <ellipse cx="48" cy="89" rx="24" ry="3.4" fill="#e7dbe0" opacity=".7" />
+              <g fill="#e6c78d" opacity=".85">
+                <path d="M14 22l1.6 4.4L20 28l-4.4 1.6L14 34l-1.6-4.4L8 28l4.4-1.6z" />
+                <path d="M82 34l1.2 3.4L86.6 38l-3.4 1.2L82 42.6l-1.2-3.4L77.4 38l3.4-1.2z" />
+              </g>
+              <circle cx="48" cy="68" r="21" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
+              <circle cx="48" cy="33" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
+              <path d="M27 62C20 58 15 54 11 50" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
+              <path d="M69 62c7-4 12-8 16-12" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
+              <circle cx="10" cy="49" r="3.6" fill="#e3a3b0" />
+              <circle cx="86" cy="49" r="3.6" fill="#e3a3b0" />
+              <path d="M31 48q17 8 34 0" fill="none" stroke="#cfe3d6" stroke-width="6" stroke-linecap="round" />
+              <path d="M62 50l4 12-7-1-2-9z" fill="#cfe3d6" />
+              <path d="M34 50q14 6 28 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 6" />
+              <circle cx="48" cy="61" r="1.9" fill="#cfe3d6" />
+              <circle cx="48" cy="69" r="1.9" fill="#cfe3d6" />
+              <circle cx="48" cy="77" r="1.9" fill="#cfe3d6" />
+              <path d="M31 22C29 11 38 3 48 3c8 0 13 5 14 11z" fill="#e3a3b0" />
+              <rect x="29" y="19" width="38" height="7" rx="3.5" fill="#d98a9a" />
+              <circle cx="63" cy="5" r="4.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
+              <circle cx="42" cy="33" r="2.1" fill="#3f6855" />
+              <circle cx="54" cy="33" r="2.1" fill="#3f6855" />
+              <circle cx="37" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
+              <circle cx="59" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
+              <path d="M48 36l8.5 2.4L48 41z" fill="#e8a05c" />
+              <path d="M43 44q5 3.4 10 0" fill="none" stroke="#3f6855" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#fffdfb" stroke-width="4.6" stroke-linecap="round" />
+              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#e3a3b0" stroke-width="4.6" stroke-linecap="round" stroke-dasharray="4 5" />
+            </svg>
+          </div>
+
           <h1><span class="sparkle" aria-hidden="true">✦</span> Secret Santa <span class="sparkle" aria-hidden="true">✦</span></h1>
+          <div class="title-rule" aria-hidden="true"><span></span><i>❖</i><span></span></div>
           <p class="lede">A little holiday magic, kept private. Add your people, write a hint for each, then send everyone their own secret link.</p>
           <p class="rules">
             <span>🎁 $20 max</span>
             <span>✨ digital or handmade</span>
             <span>💌 no addresses, no emails</span>
           </p>
+          <ol class="steps">
+            <li><b>1</b> list your people</li>
+            <li><b>2</b> add little hints</li>
+            <li><b>3</b> share secret links</li>
+          </ol>
         </header>
+
+        <div class="band" aria-hidden="true"></div>
 
         <fieldset>
           <legend>Event details</legend>
@@ -363,34 +960,68 @@
             only their own link by DM, then close this page. Nothing is stored and nobody sees anyone else's match.
           </p>
         </div>
+
+        <div class="knit-band" aria-hidden="true"></div>
       </section>
 
       <section id="reveal" class="card hidden">
+        <div class="corners" aria-hidden="true"><i>❄</i><i>❄</i><i>❄</i><i>❄</i></div>
+
+        <svg class="bow" viewBox="0 0 80 46" aria-hidden="true">
+          <path d="M40 30C26 8 6 6 6 18c0 10 16 12 34 12z" fill="#f6c6d0" stroke="#d98a9a" stroke-width="1.4" />
+          <path d="M40 30C54 8 74 6 74 18c0 10-16 12-34 12z" fill="#fbe4ea" stroke="#d98a9a" stroke-width="1.4" />
+          <circle cx="40" cy="30" r="8" fill="#e3a3b0" stroke="#d98a9a" stroke-width="1.4" />
+          <circle cx="37.5" cy="27.5" r="2.4" fill="#fff" opacity=".55" />
+          <path d="M34 37l-5 9M46 37l5 9" stroke="#d98a9a" stroke-width="3.4" stroke-linecap="round" />
+        </svg>
+
+        <div class="stamp" aria-hidden="true">
+          <span>☃</span>
+          <small>NORTH POLE</small>
+        </div>
+
         <header class="hero">
-          <svg class="mascot" viewBox="0 0 72 72" aria-hidden="true">
-            <circle cx="36" cy="52" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
-            <circle cx="36" cy="28" r="14" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
-            <path d="M23 21C23 11 32 5 41 8c6 2 8 8 7 13z" fill="#e3a3b0" />
-            <rect x="21" y="19" width="30" height="6" rx="3" fill="#d98a9a" />
-            <circle cx="49" cy="10" r="3.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
-            <circle cx="31" cy="26" r="1.7" fill="#3f6855" />
-            <circle cx="41" cy="26" r="1.7" fill="#3f6855" />
-            <path d="M36 30l7 3-7 2z" fill="#e8a05c" />
-            <circle cx="27" cy="32" r="2.6" fill="#f6c6d0" />
-            <circle cx="45" cy="32" r="2.6" fill="#f6c6d0" />
-            <path d="M32 35q4 3 8 0" fill="none" stroke="#3f6855" stroke-width="1.6" stroke-linecap="round" />
-            <path d="M24 40q12 7 24 0" fill="none" stroke="#dfeaf5" stroke-width="5" stroke-linecap="round" />
-            <circle cx="36" cy="48" r="1.5" fill="#cfe3d6" />
-            <circle cx="36" cy="55" r="1.5" fill="#cfe3d6" />
-            <path d="M19 48l-9-5M53 48l9-5" stroke="#b9d8c6" stroke-width="2" stroke-linecap="round" />
-          </svg>
+          <div class="mascot-ring">
+            <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true">
+              <ellipse cx="48" cy="89" rx="24" ry="3.4" fill="#e7dbe0" opacity=".7" />
+              <circle cx="48" cy="68" r="21" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
+              <circle cx="48" cy="33" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
+              <path d="M27 62C20 58 15 54 11 50" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
+              <path d="M69 62c7-4 12-8 16-12" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
+              <circle cx="10" cy="49" r="3.6" fill="#e3a3b0" />
+              <circle cx="86" cy="49" r="3.6" fill="#e3a3b0" />
+              <path d="M31 48q17 8 34 0" fill="none" stroke="#cfe3d6" stroke-width="6" stroke-linecap="round" />
+              <path d="M62 50l4 12-7-1-2-9z" fill="#cfe3d6" />
+              <path d="M34 50q14 6 28 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 6" />
+              <circle cx="48" cy="61" r="1.9" fill="#cfe3d6" />
+              <circle cx="48" cy="69" r="1.9" fill="#cfe3d6" />
+              <circle cx="48" cy="77" r="1.9" fill="#cfe3d6" />
+              <path d="M31 22C29 11 38 3 48 3c8 0 13 5 14 11z" fill="#e3a3b0" />
+              <rect x="29" y="19" width="38" height="7" rx="3.5" fill="#d98a9a" />
+              <circle cx="63" cy="5" r="4.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
+              <circle cx="42" cy="33" r="2.1" fill="#3f6855" />
+              <circle cx="54" cy="33" r="2.1" fill="#3f6855" />
+              <circle cx="37" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
+              <circle cx="59" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
+              <path d="M48 36l8.5 2.4L48 41z" fill="#e8a05c" />
+              <path d="M43 44q5 3.4 10 0" fill="none" stroke="#3f6855" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#fffdfb" stroke-width="4.6" stroke-linecap="round" />
+              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#e3a3b0" stroke-width="4.6" stroke-linecap="round" stroke-dasharray="4 5" />
+            </svg>
+          </div>
         </header>
+
         <p class="label">You are buying a gift for</p>
-        <p id="match">…</p>
+        <div class="match-wrap">
+          <p id="match">…</p>
+          <div class="seal" aria-hidden="true">❄</div>
+        </div>
+
         <div class="letter" id="letter" hidden>
           <h2>Their little hints</h2>
           <p id="hint-text"></p>
         </div>
+
         <p class="rules" id="reveal-rules">
           <span>🎁 $20 max</span>
           <span id="reveal-day" hidden></span>
@@ -398,9 +1029,23 @@
         <p class="actions" style="margin-top:22px; justify-content:center">
           <button id="start-over" class="secondary">Start over ✨</button>
         </p>
+
+        <div class="knit-band" aria-hidden="true"></div>
       </section>
 
-      <footer>Made with snowflakes, cocoa &amp; secrecy ❄️</footer>
+      <footer>
+        <div class="knit-rule" aria-hidden="true"></div>
+        <p>
+          <svg class="mug" viewBox="0 0 40 34" aria-hidden="true">
+            <path d="M6 12h24v12a8 8 0 0 1-8 8H14a8 8 0 0 1-8-8z" fill="#fffdfb" stroke="#d8c4a8" stroke-width="1.6" />
+            <path d="M30 15h4a4 4 0 0 1 0 8h-4" fill="none" stroke="#d8c4a8" stroke-width="1.6" />
+            <path d="M4 12h28" stroke="#e3a3b0" stroke-width="3" stroke-linecap="round" />
+            <path d="M12 7c-2-3 1-4 0-6M20 7c-2-3 1-4 0-6M28 7c-2-3 1-4 0-6" fill="none" stroke="#cfe6d7" stroke-width="1.5" stroke-linecap="round" />
+            <circle cx="22" cy="4" r="2.2" fill="#fff8e1" stroke="#e6c78d" stroke-width="1" />
+          </svg>
+          Made with snowflakes, cocoa &amp; secrecy ❄️
+        </p>
+      </footer>
     </main>
 
     <script type="module" src="./src/ui.js"></script>
