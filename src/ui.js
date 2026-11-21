@@ -21,6 +21,110 @@ const view = $("#view");
 const lede = $("#lede");
 let pollTimer = null;
 
+/* ── cute hover sounds, synthesised with Web Audio (no audio files) ── */
+let audioCtx = null;
+let master = null;
+let soundOn = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let lastTone = 0;
+
+function ensureAudio() {
+  if (audioCtx) return true;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return false;
+  audioCtx = new Ctx();
+  master = audioCtx.createGain();
+  master.gain.value = 0.9;
+  master.connect(audioCtx.destination);
+  return true;
+}
+
+function unlockAudio() {
+  if (!soundOn || !ensureAudio()) return;
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+
+function blip(freq, { to = null, when = 0, dur = 0.14, gain = 0.05, type = "sine" } = {}) {
+  const ctx = audioCtx;
+  const start = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const env = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  if (to) osc.frequency.exponentialRampToValueAtTime(to, start + dur);
+  env.gain.setValueAtTime(0.0001, start);
+  env.gain.exponentialRampToValueAtTime(gain, start + 0.012);
+  env.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(env).connect(master);
+  osc.start(start);
+  osc.stop(start + dur + 0.02);
+}
+
+const SOUNDS = {
+  pop() {
+    const bend = 1 + Math.random() * 0.06;
+    blip(520 * bend, { to: 780 * bend, dur: 0.1, gain: 0.055 });
+  },
+  chime() {
+    const bend = 1 + (Math.random() - 0.5) * 0.04;
+    blip(1046 * bend, { dur: 0.2, gain: 0.045 });
+    blip(1568 * bend, { when: 0.065, dur: 0.24, gain: 0.03 });
+  },
+  twinkle() {
+    const bend = 1 + (Math.random() - 0.5) * 0.06;
+    blip(1318 * bend, { dur: 0.1, gain: 0.035, type: "triangle" });
+    blip(1760 * bend, { when: 0.05, dur: 0.13, gain: 0.028, type: "triangle" });
+  },
+};
+
+function playSound(name) {
+  if (!soundOn) return;
+  if (!ensureAudio() || audioCtx.state !== "running") return;
+  const now = performance.now();
+  if (now - lastTone < 90) return;
+  lastTone = now;
+  (SOUNDS[name] || SOUNDS.pop)();
+}
+
+function soundFor(el) {
+  if (el.matches(".mascot-ring, .mascot, .mug")) return "chime";
+  if (el.matches(".bulb")) return "twinkle";
+  return "pop";
+}
+
+function setupSound() {
+  const toggle = $("#sound-toggle");
+  if (!toggle) return;
+
+  const paint = () => {
+    toggle.textContent = soundOn ? "Sound on" : "Sound off";
+    toggle.setAttribute("aria-pressed", String(soundOn));
+    toggle.classList.toggle("off", !soundOn);
+  };
+
+  toggle.addEventListener("click", () => {
+    soundOn = !soundOn;
+    if (soundOn) unlockAudio();
+    paint();
+  });
+  paint();
+
+  for (const ev of ["pointerdown", "keydown", "touchstart"]) {
+    window.addEventListener(ev, unlockAudio, { passive: true, once: true });
+  }
+
+  document.addEventListener(
+    "pointerover",
+    (event) => {
+      if (event.pointerType === "touch") return;
+      const target = event.target.closest(".mascot-ring, .mascot, .bulb, .mug, button");
+      if (!target) return;
+      if (event.relatedTarget && target.contains(event.relatedTarget)) return;
+      playSound(soundFor(target));
+    },
+    { passive: true }
+  );
+}
+
 /* ───────────────────────────── small helpers ───────────────────────────── */
 
 function safeStorage() {
@@ -700,6 +804,7 @@ function route() {
 }
 
 $("#demo-banner").hidden = db.mode !== "demo";
+setupSound();
 addSnow();
 window.addEventListener("hashchange", () => {
   route();

@@ -1446,9 +1446,29 @@
         .copy-row input { flex-basis: 100%; }
         .gift-row { flex-wrap: wrap; }
       }
+    .sound-toggle {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        z-index: 30;
+        padding: 9px 15px;
+        border: 1.5px solid #f0dfe5;
+        border-radius: 999px;
+        background: #fff;
+        color: #a35d70;
+        font: 800 12.5px/1 ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        box-shadow: 0 6px 16px rgba(163, 93, 112, .14);
+        cursor: pointer;
+      }
+      .sound-toggle::before { content: "♪ "; color: #c9a15f; }
+      .sound-toggle.off { color: #8d968f; }
+      .sound-toggle.off::before { content: "✕ "; }
+      .sound-toggle:hover { transform: translateY(-1px); }
     </style>
   </head>
   <body>
+    <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button>
+
     <svg class="sprite" aria-hidden="true" focusable="false">
       <defs>
         <symbol id="snowman-mascot" viewBox="0 0 96 96">
