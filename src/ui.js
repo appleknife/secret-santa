@@ -12,16 +12,54 @@ const CAP = 20;
 const wishes = new Map();
 let generated = [];
 
+const SNOW_TONES = ["#fffdfb", "#e8f2fb", "#c3dcec", "#bcdccb", "#eec0cb", "#f0dca8"];
+
+function snowTier() {
+  const roll = Math.random();
+  if (roll < 0.3) return { cls: "far", min: 6, span: 3, dur: 20, fade: 0.45 };
+  if (roll > 0.78) return { cls: "near", min: 16, span: 6, dur: 8, fade: 0.9 };
+  return { cls: "mid", min: 10, span: 4, dur: 13, fade: 0.7 };
+}
+
+function snowFlakeSvg(shape) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  use.setAttribute("href", `#${shape}`);
+  svg.appendChild(use);
+  return svg;
+}
+
 function addSnow() {
   const layer = $("snow");
-  for (let i = 0; i < 20; i++) {
+  const frag = document.createDocumentFragment();
+
+  for (let i = 0; i < 36; i++) {
+    const tier = snowTier();
+    const size = tier.min + Math.random() * tier.span;
     const flake = document.createElement("i");
+    flake.className = tier.cls === "mid" ? "flake" : `flake ${tier.cls}`;
     flake.style.setProperty("--x", `${Math.random() * 100}vw`);
-    flake.style.setProperty("--size", `${3 + Math.random() * 5}px`);
-    flake.style.setProperty("--dur", `${7 + Math.random() * 11}s`);
-    flake.style.setProperty("--delay", `${-Math.random() * 14}s`);
-    layer.appendChild(flake);
+    flake.style.setProperty("--size", `${size}px`);
+    flake.style.setProperty("--dur", `${tier.dur + Math.random() * 7}s`);
+    flake.style.setProperty("--delay", `${-Math.random() * 24}s`);
+    flake.style.setProperty("--drift", `${-24 + Math.random() * 60}px`);
+    flake.style.setProperty("--sway-dur", `${3 + Math.random() * 4}s`);
+    flake.style.setProperty("--tone", SNOW_TONES[Math.floor(Math.random() * SNOW_TONES.length)]);
+    flake.style.setProperty("--opacity", `${tier.fade + Math.random() * 0.15}`);
+
+    const spin = document.createElement("span");
+    spin.className = "spin";
+    const shape = size < 8 ? "flake-simple" : Math.random() < 0.6 ? "flake-classic" : "flake-crystal";
+    const svg = snowFlakeSvg(shape);
+    svg.style.transform = `rotate(${Math.round(Math.random() * 60)}deg)`;
+    spin.appendChild(svg);
+    flake.appendChild(spin);
+    frag.appendChild(flake);
   }
+
+  layer.appendChild(frag);
 }
 
 function renderWishFields() {

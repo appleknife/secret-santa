@@ -43,7 +43,7 @@
         --line-soft: #f1e6ea;
 
         /* patterned paper tiles */
-        --flake-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104' viewBox='0 0 104 104'%3E%3Cg fill='none' stroke='%23cfe6d7' stroke-width='1.1' stroke-linecap='round' opacity='.7'%3E%3Cpath d='M52 18v68M18 52h68M28 28l48 48M76 28L28 76'/%3E%3Cpath d='M44 25l8 8 8-8M44 79l8-8 8 8M25 44l8 8-8 8M79 44l-8 8 8 8'/%3E%3Ccircle cx='52' cy='52' r='2.8'/%3E%3C/g%3E%3C/svg%3E");
+        --flake-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104' viewBox='0 0 104 104'%3E%3Cg fill='none' stroke='%23dcece3' stroke-width='1.1' stroke-linecap='round' opacity='.4'%3E%3Cpath d='M52 18v68M18 52h68M28 28l48 48M76 28L28 76'/%3E%3Cpath d='M44 25l8 8 8-8M44 79l8-8 8 8M25 44l8 8-8 8M79 44l-8 8 8 8'/%3E%3Ccircle cx='52' cy='52' r='2.8'/%3E%3C/g%3E%3C/svg%3E");
         --holly-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg opacity='.55'%3E%3Cg transform='translate(15 15)'%3E%3Cellipse cx='-6' cy='4' rx='8' ry='3.4' transform='rotate(-32 -6 4)' fill='%23dcefe3'/%3E%3Cellipse cx='6' cy='4' rx='8' ry='3.4' transform='rotate(32 6 4)' fill='%23dcefe3'/%3E%3Ccircle cx='0' cy='-3' r='2.2' fill='%23f2c9d3'/%3E%3Ccircle cx='-4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3Ccircle cx='4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3C/g%3E%3Cg transform='translate(49 49) rotate(180)'%3E%3Cellipse cx='-6' cy='4' rx='8' ry='3.4' transform='rotate(-32 -6 4)' fill='%23dcefe3'/%3E%3Cellipse cx='6' cy='4' rx='8' ry='3.4' transform='rotate(32 6 4)' fill='%23dcefe3'/%3E%3Ccircle cx='0' cy='-3' r='2.2' fill='%23f2c9d3'/%3E%3Ccircle cx='-4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3Ccircle cx='4' cy='-6' r='1.6' fill='%23f2c9d3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         --band-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='20' viewBox='0 0 48 20'%3E%3Cg fill='none' stroke='%23b9d8c6' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M0 3h48M0 17h48'/%3E%3Cpath d='M3 17l5-10 5 10M13 3l5 10 5-10M23 17l5-10 5 10M33 3l5 10 5-10M43 17l2-4 2 4'/%3E%3C/g%3E%3Cg fill='%23e3a3b0'%3E%3Ccircle cx='8' cy='10' r='1.4'/%3E%3Ccircle cx='32' cy='10' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
         --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E");
@@ -56,6 +56,7 @@
       * { box-sizing: border-box; }
       html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
       [hidden] { display: none !important; }
+      .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
       body {
         margin: 0;
@@ -113,25 +114,36 @@
         mix-blend-mode: multiply;
       }
 
-      /* falling snow */
+      /* falling snow — six-fold SVG flakes in three depth layers */
       .snow { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-      .snow i {
+      .snow .flake {
         position: absolute;
-        top: -22px;
+        top: -10vh;
         left: var(--x);
         width: var(--size);
         height: var(--size);
-        border-radius: 50%;
-        background: #fff;
-        opacity: .8;
-        filter: blur(.2px);
+        color: var(--tone, #fffdfb);
+        opacity: var(--opacity, .75);
         animation: fall var(--dur) linear var(--delay) infinite;
+        will-change: transform;
       }
-      .snow i:nth-child(3n) { background: var(--blue); }
-      .snow i:nth-child(3n + 1) { background: var(--berry); opacity: .55; }
-      .snow i:nth-child(4n) { background: var(--candle); }
+      .snow .flake svg { display: block; width: 100%; height: 100%; overflow: visible; }
+      .snow .flake .spin {
+        display: block;
+        width: 100%;
+        height: 100%;
+        transform-origin: 50% 50%;
+        animation: sway var(--sway-dur, 5s) ease-in-out var(--delay) infinite alternate;
+      }
+      .snow .flake { filter: drop-shadow(0 1px 1.2px rgba(74, 104, 90, .28)); }
+      .snow .flake.near { filter: drop-shadow(0 1.5px 2px rgba(74, 104, 90, .3)); }
+      .snow .flake.far { filter: blur(.3px) drop-shadow(0 1px 1px rgba(74, 104, 90, .22)); }
       @keyframes fall {
-        to { transform: translate(40px, 110vh); }
+        to { transform: translate3d(var(--drift, 24px), 112vh, 0); }
+      }
+      @keyframes sway {
+        from { transform: translateX(-5px) rotate(-11deg); }
+        to { transform: translateX(5px) rotate(11deg); }
       }
 
       main {
@@ -186,18 +198,18 @@
       }
 
       /* little snowflakes in the card corners */
-      .corners i {
+      .corners svg {
         position: absolute;
+        width: 13px;
+        height: 13px;
         color: var(--mint-deep);
-        font-style: normal;
-        font-size: 12px;
         opacity: .8;
         pointer-events: none;
       }
-      .corners i:nth-child(1) { top: 8px; left: 10px; }
-      .corners i:nth-child(2) { top: 8px; right: 10px; }
-      .corners i:nth-child(3) { bottom: 8px; left: 10px; }
-      .corners i:nth-child(4) { bottom: 8px; right: 10px; }
+      .corners svg:nth-child(1) { top: 8px; left: 10px; }
+      .corners svg:nth-child(2) { top: 8px; right: 10px; }
+      .corners svg:nth-child(3) { bottom: 8px; left: 10px; }
+      .corners svg:nth-child(4) { bottom: 8px; right: 10px; }
 
       /* bow that ties the ribbon */
       .bow {
@@ -257,8 +269,8 @@
       .mascot-ring::after { bottom: 8px; right: 0; animation-delay: 1.4s; }
 
       .mascot {
-        width: 86px;
-        height: 86px;
+        width: 94px;
+        height: 94px;
         filter: drop-shadow(0 6px 10px rgba(63, 104, 85, .12));
         animation: bob 4.8s ease-in-out infinite;
       }
@@ -796,7 +808,7 @@
         .bow { top: -25px; width: 52px; }
         h1 { font-size: 31px; }
         .mascot-ring { width: 96px; height: 96px; }
-        .mascot { width: 74px; height: 74px; }
+        .mascot { width: 80px; height: 80px; }
         .steps li { font-size: 11.5px; padding: 3px 9px 3px 4px; }
         .band { margin-bottom: 16px; }
         .wish-row { flex-direction: column; align-items: stretch; gap: 2px; }
@@ -810,12 +822,107 @@
     </style>
   </head>
   <body>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <defs>
+        <symbol id="snowman-mascot" viewBox="0 0 96 96">
+          <ellipse cx="48" cy="90.4" rx="20" ry="2.6" fill="#dfe8e2" opacity=".7" />
+          <g fill="none" stroke="#9c7a5a" stroke-width="1.7" stroke-linecap="round">
+            <path d="M35.2 60 Q26 57 18 53.2" />
+            <path d="M29.8 58.2 L25.6 52.6" />
+            <path d="M24.2 55.8 L26.8 50" />
+            <path d="M60.8 60 Q70 57 78 53.2" />
+            <path d="M66.2 58.2 L70.4 52.6" />
+            <path d="M71.8 55.8 L69.2 50" />
+          </g>
+          <circle cx="48" cy="73" r="17" fill="#fffdfb" stroke="#c9e0d3" stroke-width="1.8" />
+          <circle cx="48" cy="53" r="14" fill="#fffdfb" stroke="#c9e0d3" stroke-width="1.8" />
+          <circle cx="48" cy="31.5" r="12.5" fill="#fffdfb" stroke="#c9e0d3" stroke-width="1.8" />
+          <circle cx="48" cy="52.5" r="1.6" fill="#3f6855" opacity=".9" />
+          <circle cx="48" cy="60" r="1.45" fill="#3f6855" opacity=".9" />
+          <circle cx="48" cy="67.2" r="1.3" fill="#3f6855" opacity=".9" />
+          <circle cx="43.4" cy="29.6" r="1.8" fill="#3f6855" />
+          <circle cx="43.9" cy="29.1" r="0.55" fill="#fff" opacity=".75" />
+          <circle cx="52.6" cy="29.6" r="1.8" fill="#3f6855" />
+          <circle cx="53.1" cy="29.1" r="0.55" fill="#fff" opacity=".75" />
+          <circle cx="39" cy="34.8" r="2.7" fill="#f6c6d0" opacity=".9" />
+          <circle cx="57" cy="34.8" r="2.7" fill="#f6c6d0" opacity=".9" />
+          <path d="M48.2 31.6 L57.6 32.5 L48.2 35.9 Z" fill="#e8a05c" stroke="#d98c47" stroke-width=".9" stroke-linejoin="round" />
+          <path d="M51 32.8 v1.9" stroke="#c97c3c" stroke-width=".7" opacity=".6" />
+          <path d="M44.3 38.8 q3.7 2.7 7.4 0" fill="none" stroke="#3f6855" stroke-width="1.4" stroke-linecap="round" />
+          <path d="M60 45.2 C63.6 47 64.4 52 63.6 57.6 L59.6 58.4 C60.2 53.4 59.6 48.8 57.6 46.8 Z" fill="#b96781" opacity=".95" />
+          <path d="M58.4 46.4 C55.5 49.6 54.9 54 55.5 58.4 L59.4 58 C58.9 53.8 59.7 49.4 61.6 47.4 Z" fill="#cf7f95" stroke="#b96781" stroke-width=".9" stroke-linejoin="round" />
+          <path d="M56.6 52 q2 1 3.3.8M56.2 55.4 q2 .9 3.2.7" stroke="#fffdfb" stroke-width=".9" opacity=".8" fill="none" stroke-linecap="round" />
+          <path d="M56.1 57.6v1.9M57.9 57.4v1.9M59.5 57.2v1.8" stroke="#b96781" stroke-width=".8" stroke-linecap="round" opacity=".9" />
+          <path d="M34.4 40.8 Q48 48.2 61.6 40.8 L63 46.2 Q48 54 33 46.2 Z" fill="#e3a3b0" stroke="#d17f92" stroke-width="1.2" stroke-linejoin="round" />
+          <path d="M37.2 44.2 q11 6 22 0" fill="none" stroke="#fffdfb" stroke-width="1.1" stroke-linecap="round" opacity=".8" />
+          <circle cx="59.8" cy="44.4" r="3.5" fill="#d98a9a" stroke="#b96781" stroke-width="1.1" />
+          <circle cx="58.8" cy="43.4" r="1" fill="#fff" opacity=".55" />
+          <path d="M34.2 20.4 C34.2 10.8 40.8 5.2 49.2 5.2 C57.6 5.2 63.4 10.4 63.8 19.6 Z" fill="#e3a3b0" stroke="#d17f92" stroke-width="1.2" stroke-linejoin="round" />
+          <path d="M55.8 7.4 C60.2 10.2 62.9 14.6 63.5 19.4 L57.8 19.4 C57.5 14.9 56.1 10.4 53.2 8.4 Z" fill="#f6c6d0" opacity=".7" />
+          <rect x="33.4" y="18.1" width="29.6" height="6.6" rx="3.3" fill="#f6c6d0" stroke="#d17f92" stroke-width="1.2" />
+          <path d="M39 19.5v4.2M45 19.5v4.2M51 19.5v4.2M57 19.5v4.2" stroke="#d98a9a" stroke-width="1" stroke-linecap="round" opacity=".8" />
+          <circle cx="53.2" cy="6" r="4.5" fill="#fff8e1" stroke="#e6c78d" stroke-width="1.1" />
+          <path d="M50.5 4.4 q2-1.6 4.4-.9" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" opacity=".85" />
+          <path d="M17 32l1.6 4.4L23 38l-4.4 1.6L17 44l-1.6-4.4L11 38l4.4-1.6z" fill="#e6c78d" opacity=".9" />
+          <path d="M82 34l1.2 3.4L86.6 38l-3.4 1.2L82 42.6l-1.2-3.4L77.4 38l3.4-1.2z" fill="#e6c78d" opacity=".9" />
+        </symbol>
+
+        <g id="flake-classic-arm" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M12 12V2.8" />
+          <path d="M12 8.1 9.55 6.3M12 8.1l2.45-1.8" />
+          <path d="M12 4.7 10.35 3.5M12 4.7l1.65-1.2" />
+        </g>
+        <symbol id="flake-classic" viewBox="0 0 24 24">
+          <use href="#flake-classic-arm" />
+          <use href="#flake-classic-arm" transform="rotate(60 12 12)" />
+          <use href="#flake-classic-arm" transform="rotate(120 12 12)" />
+          <use href="#flake-classic-arm" transform="rotate(180 12 12)" />
+          <use href="#flake-classic-arm" transform="rotate(240 12 12)" />
+          <use href="#flake-classic-arm" transform="rotate(300 12 12)" />
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+        </symbol>
+
+        <g id="flake-simple-arm" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M12 12V2.6" />
+          <path d="M12 5.1 10.1 3.6M12 5.1l1.9-1.5" />
+        </g>
+        <symbol id="flake-simple" viewBox="0 0 24 24">
+          <use href="#flake-simple-arm" />
+          <use href="#flake-simple-arm" transform="rotate(60 12 12)" />
+          <use href="#flake-simple-arm" transform="rotate(120 12 12)" />
+          <use href="#flake-simple-arm" transform="rotate(180 12 12)" />
+          <use href="#flake-simple-arm" transform="rotate(240 12 12)" />
+          <use href="#flake-simple-arm" transform="rotate(300 12 12)" />
+          <circle cx="12" cy="12" r="1.3" fill="currentColor" />
+        </symbol>
+
+        <g id="flake-crystal-arm" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M15.4 12H22" />
+          <path d="M19.7 12l1.5 1.3M19.7 12l1.5-1.3" />
+        </g>
+        <symbol id="flake-crystal" viewBox="0 0 24 24">
+          <path d="M15.4 12 L13.7 14.94 L10.3 14.94 L8.6 12 L10.3 9.06 L13.7 9.06 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+          <use href="#flake-crystal-arm" />
+          <use href="#flake-crystal-arm" transform="rotate(60 12 12)" />
+          <use href="#flake-crystal-arm" transform="rotate(120 12 12)" />
+          <use href="#flake-crystal-arm" transform="rotate(180 12 12)" />
+          <use href="#flake-crystal-arm" transform="rotate(240 12 12)" />
+          <use href="#flake-crystal-arm" transform="rotate(300 12 12)" />
+          <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+        </symbol>
+      </defs>
+    </svg>
     <div id="snow" class="snow" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
 
     <main>
       <section id="organizer" class="card">
-        <div class="corners" aria-hidden="true"><i>❄</i><i>❄</i><i>❄</i><i>❄</i></div>
+        <div class="corners" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+        </div>
 
         <svg class="bow" viewBox="0 0 80 46" aria-hidden="true">
           <path d="M40 30C26 8 6 6 6 18c0 10 16 12 34 12z" fill="#f6c6d0" stroke="#d98a9a" stroke-width="1.4" />
@@ -876,36 +983,7 @@
           </svg>
 
           <div class="mascot-ring">
-            <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true">
-              <ellipse cx="48" cy="89" rx="24" ry="3.4" fill="#e7dbe0" opacity=".7" />
-              <g fill="#e6c78d" opacity=".85">
-                <path d="M14 22l1.6 4.4L20 28l-4.4 1.6L14 34l-1.6-4.4L8 28l4.4-1.6z" />
-                <path d="M82 34l1.2 3.4L86.6 38l-3.4 1.2L82 42.6l-1.2-3.4L77.4 38l3.4-1.2z" />
-              </g>
-              <circle cx="48" cy="68" r="21" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
-              <circle cx="48" cy="33" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
-              <path d="M27 62C20 58 15 54 11 50" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
-              <path d="M69 62c7-4 12-8 16-12" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
-              <circle cx="10" cy="49" r="3.6" fill="#e3a3b0" />
-              <circle cx="86" cy="49" r="3.6" fill="#e3a3b0" />
-              <path d="M31 48q17 8 34 0" fill="none" stroke="#cfe3d6" stroke-width="6" stroke-linecap="round" />
-              <path d="M62 50l4 12-7-1-2-9z" fill="#cfe3d6" />
-              <path d="M34 50q14 6 28 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 6" />
-              <circle cx="48" cy="61" r="1.9" fill="#cfe3d6" />
-              <circle cx="48" cy="69" r="1.9" fill="#cfe3d6" />
-              <circle cx="48" cy="77" r="1.9" fill="#cfe3d6" />
-              <path d="M31 22C29 11 38 3 48 3c8 0 13 5 14 11z" fill="#e3a3b0" />
-              <rect x="29" y="19" width="38" height="7" rx="3.5" fill="#d98a9a" />
-              <circle cx="63" cy="5" r="4.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
-              <circle cx="42" cy="33" r="2.1" fill="#3f6855" />
-              <circle cx="54" cy="33" r="2.1" fill="#3f6855" />
-              <circle cx="37" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
-              <circle cx="59" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
-              <path d="M48 36l8.5 2.4L48 41z" fill="#e8a05c" />
-              <path d="M43 44q5 3.4 10 0" fill="none" stroke="#3f6855" stroke-width="1.5" stroke-linecap="round" />
-              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#fffdfb" stroke-width="4.6" stroke-linecap="round" />
-              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#e3a3b0" stroke-width="4.6" stroke-linecap="round" stroke-dasharray="4 5" />
-            </svg>
+            <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true"><use href="#snowman-mascot" width="96" height="96" /></svg>
           </div>
 
           <h1><span class="sparkle" aria-hidden="true">✦</span> Secret Santa <span class="sparkle" aria-hidden="true">✦</span></h1>
@@ -965,7 +1043,12 @@
       </section>
 
       <section id="reveal" class="card hidden">
-        <div class="corners" aria-hidden="true"><i>❄</i><i>❄</i><i>❄</i><i>❄</i></div>
+        <div class="corners" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+          <svg viewBox="0 0 24 24"><use href="#flake-classic" /></svg>
+        </div>
 
         <svg class="bow" viewBox="0 0 80 46" aria-hidden="true">
           <path d="M40 30C26 8 6 6 6 18c0 10 16 12 34 12z" fill="#f6c6d0" stroke="#d98a9a" stroke-width="1.4" />
@@ -982,32 +1065,7 @@
 
         <header class="hero">
           <div class="mascot-ring">
-            <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true">
-              <ellipse cx="48" cy="89" rx="24" ry="3.4" fill="#e7dbe0" opacity=".7" />
-              <circle cx="48" cy="68" r="21" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
-              <circle cx="48" cy="33" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.2" />
-              <path d="M27 62C20 58 15 54 11 50" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
-              <path d="M69 62c7-4 12-8 16-12" fill="none" stroke="#b9a68f" stroke-width="2.4" stroke-linecap="round" />
-              <circle cx="10" cy="49" r="3.6" fill="#e3a3b0" />
-              <circle cx="86" cy="49" r="3.6" fill="#e3a3b0" />
-              <path d="M31 48q17 8 34 0" fill="none" stroke="#cfe3d6" stroke-width="6" stroke-linecap="round" />
-              <path d="M62 50l4 12-7-1-2-9z" fill="#cfe3d6" />
-              <path d="M34 50q14 6 28 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 6" />
-              <circle cx="48" cy="61" r="1.9" fill="#cfe3d6" />
-              <circle cx="48" cy="69" r="1.9" fill="#cfe3d6" />
-              <circle cx="48" cy="77" r="1.9" fill="#cfe3d6" />
-              <path d="M31 22C29 11 38 3 48 3c8 0 13 5 14 11z" fill="#e3a3b0" />
-              <rect x="29" y="19" width="38" height="7" rx="3.5" fill="#d98a9a" />
-              <circle cx="63" cy="5" r="4.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
-              <circle cx="42" cy="33" r="2.1" fill="#3f6855" />
-              <circle cx="54" cy="33" r="2.1" fill="#3f6855" />
-              <circle cx="37" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
-              <circle cx="59" cy="39" r="3" fill="#f6c6d0" opacity=".85" />
-              <path d="M48 36l8.5 2.4L48 41z" fill="#e8a05c" />
-              <path d="M43 44q5 3.4 10 0" fill="none" stroke="#3f6855" stroke-width="1.5" stroke-linecap="round" />
-              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#fffdfb" stroke-width="4.6" stroke-linecap="round" />
-              <path d="M79 84v-9a4.5 4.5 0 0 1 9 0" fill="none" stroke="#e3a3b0" stroke-width="4.6" stroke-linecap="round" stroke-dasharray="4 5" />
-            </svg>
+            <svg class="mascot" viewBox="0 0 96 96" aria-hidden="true"><use href="#snowman-mascot" width="96" height="96" /></svg>
           </div>
         </header>
 
