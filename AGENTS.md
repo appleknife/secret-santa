@@ -41,10 +41,14 @@ GitHub Pages deploys `master` — a broken commit there is a broken app for ever
 
 ## Checks
 
-| Stack | Command |
-|---|---|
-| Python | `python -m pytest -q` · `ruff check .` |
-| JS/TS | `npx tsc --noEmit` · `npm test -- --run` |
+This project uses exactly one check:
+
+```bash
+npm test        # runs node --test tests/
+```
+
+There is no pytest, no TypeScript and no build step here — don't look for them, and don't add
+`--run` or other flags to `npm test`.
 
 If a check doesn't exist yet, say so instead of claiming the change works.
 
