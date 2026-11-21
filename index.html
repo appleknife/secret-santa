@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#eef6f0" />
-    <title>Secret Santa — a little holiday magic</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Ccircle%20cx='32'%20cy='42'%20r='17'%20fill='%23fffdfb'%20stroke='%23cfe3d6'%20stroke-width='3'/%3E%3Ccircle%20cx='32'%20cy='21'%20r='13'%20fill='%23fffdfb'%20stroke='%23cfe3d6'%20stroke-width='3'/%3E%3Cpath%20d='M21%2015c0-7%207-10%2014-6%203%201%204%204%203%206z'%20fill='%23e3a3b0'/%3E%3Crect%20x='19'%20y='13'%20width='26'%20height='5'%20rx='2.5'%20fill='%23d98a9a'/%3E%3Ccircle%20cx='27'%20cy='21'%20r='1.6'%20fill='%233f6855'/%3E%3Ccircle%20cx='37'%20cy='21'%20r='1.6'%20fill='%233f6855'/%3E%3Cpath%20d='M32%2024l5%202-5%201.6z'%20fill='%23e8a05c'/%3E%3C/svg%3E" />
+    <title>Secret Santa ✨ — a little holiday magic</title>
     <style>
       :root {
         --cream: #fffaf9;
@@ -16,6 +17,7 @@
         --gold: #e6c78d;
         --mint: #dff0e5;
         --blue: #dfeaf5;
+        --butter: #fbf0cd;
         --soft: #f9edf1;
         --line: #e7dbe0;
         color-scheme: light;
@@ -25,7 +27,9 @@
         margin: 0;
         min-height: 100vh;
         color: var(--ink);
-        font: 16px/1.6 "Segoe UI", system-ui, sans-serif;
+        font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        font-size: 16px;
+        line-height: 1.65;
         background:
           radial-gradient(circle at 12% 9%, rgba(255,255,255,.9) 0 2px, transparent 3px),
           radial-gradient(circle at 78% 21%, rgba(255,255,255,.75) 0 2px, transparent 3px),
@@ -33,6 +37,29 @@
           linear-gradient(165deg, var(--cream) 0%, var(--mint) 48%, var(--soft) 100%);
         background-attachment: fixed;
         padding: 40px 18px 64px;
+      }
+      body::before, body::after {
+        content: "";
+        position: fixed;
+        z-index: 0;
+        border-radius: 50%;
+        filter: blur(46px);
+        opacity: .55;
+        pointer-events: none;
+      }
+      body::before {
+        width: 300px;
+        height: 300px;
+        top: -80px;
+        right: -70px;
+        background: radial-gradient(circle, #f7d7e1, transparent 70%);
+      }
+      body::after {
+        width: 340px;
+        height: 340px;
+        bottom: -100px;
+        left: -80px;
+        background: radial-gradient(circle, #cfead9, transparent 70%);
       }
       .snow { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
       .snow i {
@@ -56,28 +83,50 @@
       }
       main { position: relative; z-index: 1; width: min(720px, 100%); margin: 0 auto; }
       .card {
-        background: rgba(255, 253, 252, .95);
-        border: 1px solid var(--line);
-        border-top: 4px solid var(--mint);
-        border-radius: 20px;
-        box-shadow: 0 18px 50px rgba(112, 86, 96, .12);
-        padding: 30px 32px 34px;
+        background:
+          linear-gradient(180deg, #fffefd, #fffafc) padding-box,
+          linear-gradient(135deg, var(--mint), var(--butter) 35%, var(--soft) 65%, var(--blue)) border-box;
+        border: 2px solid transparent;
+        border-radius: 26px;
+        box-shadow: 0 22px 60px rgba(112, 86, 96, .14), inset 0 1px 0 rgba(255, 255, 255, .9);
+        padding: 32px 34px 36px;
+        animation: card-pop .5s cubic-bezier(.2, .8, .25, 1) both;
       }
       .hero { text-align: center; margin-bottom: 26px; }
-      .flake {
-        width: 38px;
-        height: 38px;
-        color: var(--pine);
-        margin-bottom: 6px;
+      .mascot {
+        width: 78px;
+        height: 78px;
+        margin-bottom: 2px;
+        filter: drop-shadow(0 8px 14px rgba(63, 104, 85, .14));
+        animation: bob 4.5s ease-in-out infinite;
       }
       h1 {
-        font-family: Georgia, "Times New Roman", serif;
-        font-size: 38px;
-        line-height: 1.1;
-        margin: 0 0 8px;
+        font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1.05;
+        margin: 0 0 10px;
         color: var(--pine-dark);
-        letter-spacing: .3px;
+        letter-spacing: .2px;
       }
+      @supports (-webkit-background-clip: text) or (background-clip: text) {
+        h1 {
+          background: linear-gradient(120deg, var(--pine-dark) 10%, #6f9d86 45%, var(--berry-ink) 90%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+      }
+      .sparkle {
+        display: inline-block;
+        color: var(--gold);
+        -webkit-text-fill-color: var(--gold);
+        font-size: .42em;
+        vertical-align: super;
+        animation: twinkle 3s ease-in-out infinite;
+      }
+      .sparkle:last-child { animation-delay: 1.5s; }
       .lede { color: #637168; margin: 0 auto 14px; max-width: 52ch; }
       .hero::after {
         content: "";
@@ -95,41 +144,51 @@
       }
       .rules { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 0; }
       .rules span {
-        background: var(--soft);
-        border: 1px solid var(--line);
+        background: linear-gradient(180deg, #fff, var(--soft));
+        border: 1.5px solid #f1dfe6;
         border-radius: 999px;
-        padding: 4px 12px;
+        padding: 5px 13px;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--berry-ink);
+        box-shadow: 0 3px 8px rgba(163, 93, 112, .08);
       }
-      .rules span:nth-child(2) { background: var(--mint); color: var(--pine-dark); }
-      .rules span:nth-child(3) { background: var(--blue); color: #54728a; }
+      .rules span:nth-child(2) { background: linear-gradient(180deg, #fff, var(--mint)); color: var(--pine-dark); border-color: #cfe6d7; }
+      .rules span:nth-child(3) { background: linear-gradient(180deg, #fff, var(--blue)); color: #54728a; border-color: #d3e3f1; }
       fieldset {
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 14px 16px 16px;
+        border: 1.5px solid #efe3e7;
+        border-radius: 18px;
+        padding: 15px 17px 17px;
         margin: 0 0 16px;
-        background: rgba(255, 255, 255, .72);
+        background: linear-gradient(180deg, rgba(255, 255, 255, .88), rgba(255, 251, 252, .72));
       }
       legend {
-        padding: 0 8px;
+        padding: 0 10px;
         color: var(--pine-dark);
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 800;
         letter-spacing: .2px;
       }
+      legend::before { content: "✦ "; color: var(--gold); }
       textarea, input[type="text"], input[type="date"] {
         width: 100%;
         background: #fffafc;
         color: var(--ink);
-        border: 1px solid var(--line);
-        border-radius: 9px;
-        padding: 10px 12px;
-        font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+        border: 1.5px solid #ece0e5;
+        border-radius: 14px;
+        padding: 11px 14px;
+        font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
       }
       textarea { min-height: 88px; resize: vertical; font-family: ui-monospace, Consolas, monospace; }
-      input:focus, textarea:focus { outline: 2px solid var(--pine); outline-offset: 1px; }
+      input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--pine);
+        box-shadow: 0 0 0 4px rgba(91, 139, 115, .14);
+        background: #fff;
+      }
       .wish-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
       .wish-row span { flex: 0 0 116px; font-weight: 600; color: var(--pine-dark); overflow: hidden; text-overflow: ellipsis; }
       .wish-row input { flex: 1; min-width: 0; }
@@ -137,27 +196,43 @@
       .date-row { display: flex; align-items: center; gap: 12px; }
       .date-row input { flex: 1; }
       button {
-        background: var(--pine-dark);
+        background: linear-gradient(135deg, #7fb298, #4f7c65);
         color: #fff;
         border: 0;
-        border-radius: 10px;
-        padding: 12px 20px;
-        font: 700 15px/1 "Segoe UI", system-ui, sans-serif;
+        border-radius: 999px;
+        padding: 13px 24px;
+        font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1;
         cursor: pointer;
-        box-shadow: 0 6px 14px rgba(63, 104, 85, .18);
-        transition: transform .12s ease, filter .12s ease;
+        box-shadow: 0 10px 22px rgba(63, 104, 85, .22);
+        transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
       }
-      button:hover { filter: brightness(1.12); transform: translateY(-1px); }
-      button:active { transform: translateY(0); }
-      button.secondary { background: var(--soft); color: var(--berry-ink); border: 1px solid var(--line); box-shadow: none; }
-      button.small { padding: 7px 12px; font-size: 13px; }
+      button:hover { transform: translateY(-2px) scale(1.015); box-shadow: 0 14px 28px rgba(63, 104, 85, .26); filter: saturate(1.05); }
+      button:active { transform: translateY(0) scale(.99); box-shadow: 0 6px 14px rgba(63, 104, 85, .2); }
+      button.secondary {
+        background: linear-gradient(135deg, #fff, #f8edf2);
+        color: var(--berry-ink);
+        border: 1.5px solid #f0dfe5;
+        box-shadow: 0 6px 14px rgba(163, 93, 112, .08);
+      }
+      button.small { padding: 8px 14px; font-size: 13px; }
       .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
       .status { color: #637168; font-size: 14px; margin: 14px 0 0; }
-      .status.error { color: var(--berry-ink); font-weight: 600; }
-      table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-      td { padding: 9px 4px; border-bottom: 1px solid var(--line); }
-      tbody tr:nth-child(even) { background: rgba(223, 240, 229, .45); }
-      td:last-child { text-align: right; width: 130px; }
+      .status.error { color: var(--berry-ink); font-weight: 700; }
+      table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin-top: 18px; }
+      td {
+        padding: 10px 8px;
+        vertical-align: middle;
+        background: rgba(255, 255, 255, .75);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+      td:first-child { border-left: 1px solid var(--line); border-radius: 12px 0 0 12px; }
+      td:last-child { border-right: 1px solid var(--line); border-radius: 0 12px 12px 0; text-align: right; width: 130px; }
+      tbody tr:nth-child(even) td { background: rgba(223, 240, 229, .55); }
+      tbody tr:hover td { background: rgba(249, 237, 241, .8); }
       .note {
         color: #758078;
         font-size: 13px;
@@ -166,35 +241,58 @@
         border-top: 1px dashed var(--line);
       }
       #reveal { text-align: center; }
-      #reveal .label { color: #758078; font-size: 14px; margin: 0 0 6px; }
+      #reveal .label { color: #758078; font-size: 14px; margin: 0 0 8px; }
       #match {
-        font-family: Georgia, "Times New Roman", serif;
+        display: inline-block;
+        font-family: ui-rounded, "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
         font-size: 40px;
+        font-weight: 800;
         line-height: 1.15;
         color: var(--berry-ink);
-        text-shadow: 0 2px 0 rgba(227, 163, 176, .25);
+        background: linear-gradient(135deg, #fff, #fff3f7);
+        border: 1.5px dashed #ecc9d3;
+        border-radius: 20px;
+        padding: 6px 24px;
+        box-shadow: 0 10px 24px rgba(163, 93, 112, .12);
         margin: 0 0 18px;
         word-break: break-word;
       }
       .letter {
-        background: #fffafd;
-        border: 1px solid var(--line);
-        border-left: 5px solid var(--gold);
-        border-radius: 10px;
-        padding: 14px 18px;
+        background: linear-gradient(135deg, #fffdfb, #fff6fa);
+        border: 1.5px solid #f0dfe5;
+        border-left: 6px solid var(--gold);
+        border-radius: 16px;
+        padding: 16px 20px;
         margin: 0 0 16px;
         text-align: left;
+        box-shadow: 0 8px 18px rgba(112, 86, 96, .07);
       }
       .letter h2 { margin: 0 0 6px; font-size: 13px; color: var(--berry-ink); text-transform: uppercase; letter-spacing: .6px; }
       .letter p { margin: 0; color: #5a675e; }
       .hidden { display: none !important; }
-      footer { text-align: center; color: #929c95; font-size: 12px; margin-top: 18px; }
+      footer { text-align: center; color: #96a099; font-size: 12px; margin-top: 20px; letter-spacing: .2px; }
+      @keyframes card-pop {
+        from { opacity: 0; transform: translateY(14px) scale(.99); }
+        to { opacity: 1; transform: none; }
+      }
+      @keyframes bob {
+        0%, 100% { transform: translateY(0) rotate(-1deg); }
+        50% { transform: translateY(-5px) rotate(1deg); }
+      }
+      @keyframes twinkle {
+        0%, 100% { opacity: .5; transform: scale(.85) rotate(0); }
+        50% { opacity: 1; transform: scale(1.15) rotate(8deg); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .card, .mascot, .sparkle { animation: none; }
+      }
       @media (max-width: 520px) {
-        .card { padding: 22px 18px 26px; }
-        h1 { font-size: 30px; }
+        .card { padding: 24px 18px 28px; border-radius: 22px; }
+        h1 { font-size: 32px; }
+        .mascot { width: 64px; height: 64px; }
         .wish-row { align-items: stretch; flex-direction: column; gap: 2px; }
         .wish-row span { flex: none; }
-        #match { font-size: 32px; }
+        #match { font-size: 30px; padding: 4px 16px; }
       }
     </style>
   </head>
@@ -204,16 +302,29 @@
     <main>
       <section id="organizer" class="card">
         <header class="hero">
-          <svg class="flake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-            <path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1" />
-            <path d="M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3" />
+          <svg class="mascot" viewBox="0 0 72 72" aria-hidden="true">
+            <circle cx="36" cy="52" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
+            <circle cx="36" cy="28" r="14" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
+            <path d="M23 21C23 11 32 5 41 8c6 2 8 8 7 13z" fill="#e3a3b0" />
+            <rect x="21" y="19" width="30" height="6" rx="3" fill="#d98a9a" />
+            <circle cx="49" cy="10" r="3.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
+            <circle cx="31" cy="26" r="1.7" fill="#3f6855" />
+            <circle cx="41" cy="26" r="1.7" fill="#3f6855" />
+            <path d="M36 30l7 3-7 2z" fill="#e8a05c" />
+            <circle cx="27" cy="32" r="2.6" fill="#f6c6d0" />
+            <circle cx="45" cy="32" r="2.6" fill="#f6c6d0" />
+            <path d="M32 35q4 3 8 0" fill="none" stroke="#3f6855" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M24 40q12 7 24 0" fill="none" stroke="#dfeaf5" stroke-width="5" stroke-linecap="round" />
+            <circle cx="36" cy="48" r="1.5" fill="#cfe3d6" />
+            <circle cx="36" cy="55" r="1.5" fill="#cfe3d6" />
+            <path d="M19 48l-9-5M53 48l9-5" stroke="#b9d8c6" stroke-width="2" stroke-linecap="round" />
           </svg>
-          <h1>Secret Santa</h1>
+          <h1><span class="sparkle" aria-hidden="true">✦</span> Secret Santa <span class="sparkle" aria-hidden="true">✦</span></h1>
           <p class="lede">A little holiday magic, kept private. Add your people, write a hint for each, then send everyone their own secret link.</p>
           <p class="rules">
-            <span>$20 max</span>
-            <span>digital or handmade</span>
-            <span>no addresses, no emails</span>
+            <span>🎁 $20 max</span>
+            <span>✨ digital or handmade</span>
+            <span>💌 no addresses, no emails</span>
           </p>
         </header>
 
@@ -241,8 +352,8 @@
         </div>
 
         <p class="actions" style="margin-top:18px">
-          <button id="generate">Wrap the gifts</button>
-          <button id="download" class="secondary small hidden">Download links (CSV)</button>
+          <button id="generate">Wrap the gifts 🎁</button>
+          <button id="download" class="secondary small hidden">Download links (CSV) ⬇</button>
         </p>
         <p class="status" id="status"></p>
         <div id="results-wrap" class="hidden">
@@ -256,8 +367,22 @@
 
       <section id="reveal" class="card hidden">
         <header class="hero">
-          <svg class="flake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-            <path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1" />
+          <svg class="mascot" viewBox="0 0 72 72" aria-hidden="true">
+            <circle cx="36" cy="52" r="17" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
+            <circle cx="36" cy="28" r="14" fill="#fffdfb" stroke="#cfe3d6" stroke-width="2.4" />
+            <path d="M23 21C23 11 32 5 41 8c6 2 8 8 7 13z" fill="#e3a3b0" />
+            <rect x="21" y="19" width="30" height="6" rx="3" fill="#d98a9a" />
+            <circle cx="49" cy="10" r="3.4" fill="#fffdfb" stroke="#cfe3d6" stroke-width="1.6" />
+            <circle cx="31" cy="26" r="1.7" fill="#3f6855" />
+            <circle cx="41" cy="26" r="1.7" fill="#3f6855" />
+            <path d="M36 30l7 3-7 2z" fill="#e8a05c" />
+            <circle cx="27" cy="32" r="2.6" fill="#f6c6d0" />
+            <circle cx="45" cy="32" r="2.6" fill="#f6c6d0" />
+            <path d="M32 35q4 3 8 0" fill="none" stroke="#3f6855" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M24 40q12 7 24 0" fill="none" stroke="#dfeaf5" stroke-width="5" stroke-linecap="round" />
+            <circle cx="36" cy="48" r="1.5" fill="#cfe3d6" />
+            <circle cx="36" cy="55" r="1.5" fill="#cfe3d6" />
+            <path d="M19 48l-9-5M53 48l9-5" stroke="#b9d8c6" stroke-width="2" stroke-linecap="round" />
           </svg>
         </header>
         <p class="label">You are buying a gift for</p>
@@ -267,15 +392,15 @@
           <p id="hint-text"></p>
         </div>
         <p class="rules" id="reveal-rules">
-          <span>$20 max</span>
+          <span>🎁 $20 max</span>
           <span id="reveal-day" hidden></span>
         </p>
         <p class="actions" style="margin-top:22px; justify-content:center">
-          <button id="start-over" class="secondary">Start over</button>
+          <button id="start-over" class="secondary">Start over ✨</button>
         </p>
       </section>
 
-      <footer>Made with snowflakes &amp; secrecy.</footer>
+      <footer>Made with snowflakes, cocoa &amp; secrecy ❄️</footer>
     </main>
 
     <script type="module" src="./src/ui.js"></script>
