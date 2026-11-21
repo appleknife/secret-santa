@@ -3,94 +3,204 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Secret Santa</title>
+    <meta name="theme-color" content="#1f5136" />
+    <title>Secret Santa — a little holiday magic</title>
     <style>
       :root {
-        --bg: #1e1e2e;
-        --panel: #181825;
-        --text: #cdd6f4;
-        --muted: #7f849c;
-        --accent: #89b4fa;
-        --green: #a6e3a1;
-        --red: #f38ba8;
-        color-scheme: dark;
+        --cream: #fff9ef;
+        --ink: #26342a;
+        --pine: #1f5136;
+        --pine-dark: #123524;
+        --berry: #b23a48;
+        --gold: #c9932f;
+        --soft: #f6ead6;
+        --line: #dcc9aa;
+        color-scheme: light;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
         min-height: 100vh;
-        background: var(--bg);
-        color: var(--text);
-        font: 15px/1.6 "Segoe UI", system-ui, sans-serif;
-        display: grid;
-        place-items: start center;
-        padding: 48px 20px;
+        color: var(--ink);
+        font: 16px/1.6 "Segoe UI", system-ui, sans-serif;
+        background:
+          radial-gradient(circle at 12% 9%, rgba(255,255,255,.85) 0 2px, transparent 3px),
+          radial-gradient(circle at 78% 21%, rgba(255,255,255,.7) 0 2px, transparent 3px),
+          radial-gradient(circle at 44% 71%, rgba(255,255,255,.6) 0 2px, transparent 3px),
+          linear-gradient(165deg, var(--cream), #f4e6cd 55%, #e8d5b4);
+        background-attachment: fixed;
+        padding: 40px 18px 64px;
       }
-      main { width: min(720px, 100%); }
-      h1 { font-size: 26px; margin: 0 0 4px; }
-      p.lede { color: var(--muted); margin: 0 0 28px; }
+      .snow { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+      .snow i {
+        position: absolute;
+        top: -20px;
+        left: var(--x);
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: #fff;
+        opacity: .6;
+        animation: fall var(--dur) linear var(--delay) infinite;
+      }
+      @keyframes fall {
+        to { transform: translate(38px, 108vh); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .snow { display: none; }
+      }
+      main { position: relative; z-index: 1; width: min(720px, 100%); margin: 0 auto; }
+      .card {
+        background: rgba(255, 253, 248, .94);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 18px 50px rgba(60, 40, 20, .12);
+        padding: 30px 32px 34px;
+      }
+      .hero { text-align: center; margin-bottom: 26px; }
+      .flake {
+        width: 38px;
+        height: 38px;
+        color: var(--pine);
+        margin-bottom: 6px;
+      }
+      h1 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 38px;
+        line-height: 1.1;
+        margin: 0 0 8px;
+        color: var(--pine-dark);
+        letter-spacing: .3px;
+      }
+      .lede { color: #5f6a5c; margin: 0 auto 14px; max-width: 52ch; }
+      .rules { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 0; }
+      .rules span {
+        background: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--pine);
+      }
+      .rules span:first-child { background: var(--berry); border-color: var(--berry); color: #fff; }
       fieldset {
-        border: 1px solid #313244;
-        border-radius: 10px;
-        padding: 16px 18px 18px;
-        margin: 0 0 18px;
-        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 16px 16px;
+        margin: 0 0 16px;
+        background: #fffdf8;
       }
-      legend { padding: 0 6px; color: var(--muted); font-size: 13px; }
-      textarea {
-        width: 100%;
-        min-height: 96px;
-        resize: vertical;
-        background: #11111b;
-        color: var(--text);
-        border: 1px solid #313244;
-        border-radius: 8px;
-        padding: 10px 12px;
-        font: 14px/1.5 ui-monospace, Consolas, monospace;
-      }
-      textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-      button {
-        background: var(--accent);
-        color: #11111b;
-        border: 0;
-        border-radius: 8px;
-        padding: 10px 16px;
-        font: 600 14px/1 "Segoe UI", system-ui, sans-serif;
-        cursor: pointer;
-      }
-      button:hover { filter: brightness(1.08); }
-      button.copy {
-        background: #313244;
-        color: var(--text);
-        padding: 6px 12px;
+      legend {
+        padding: 0 8px;
+        color: var(--pine);
         font-size: 13px;
-      }
-      table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-      td { padding: 8px 4px; border-bottom: 1px solid #313244; }
-      td:last-child { text-align: right; width: 120px; }
-      .status { color: var(--muted); font-size: 13px; margin-top: 14px; }
-      .status.error { color: var(--red); }
-      .note { color: var(--muted); font-size: 13px; }
-      #reveal { text-align: center; padding-top: 40px; }
-      #reveal .label { color: var(--muted); font-size: 14px; }
-      #match {
-        font-size: 34px;
         font-weight: 700;
-        color: var(--green);
-        margin: 8px 0 28px;
+        letter-spacing: .2px;
+      }
+      textarea, input[type="text"], input[type="date"] {
+        width: 100%;
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 10px 12px;
+        font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+      }
+      textarea { min-height: 88px; resize: vertical; font-family: ui-monospace, Consolas, monospace; }
+      input:focus, textarea:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+      .wish-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+      .wish-row span { flex: 0 0 116px; font-weight: 600; color: var(--pine); overflow: hidden; text-overflow: ellipsis; }
+      .wish-row input { flex: 1; min-width: 0; }
+      .hint { color: #7b8477; font-size: 13px; margin: 2px 0 0; }
+      .date-row { display: flex; align-items: center; gap: 12px; }
+      .date-row input { flex: 1; }
+      button {
+        background: var(--pine);
+        color: #fff;
+        border: 0;
+        border-radius: 10px;
+        padding: 12px 20px;
+        font: 700 15px/1 "Segoe UI", system-ui, sans-serif;
+        cursor: pointer;
+        transition: transform .12s ease, filter .12s ease;
+      }
+      button:hover { filter: brightness(1.12); transform: translateY(-1px); }
+      button:active { transform: translateY(0); }
+      button.secondary { background: var(--soft); color: var(--pine-dark); border: 1px solid var(--line); }
+      button.small { padding: 7px 12px; font-size: 13px; }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .status { color: #5f6a5c; font-size: 14px; margin: 14px 0 0; }
+      .status.error { color: var(--berry); font-weight: 600; }
+      table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+      td { padding: 9px 4px; border-bottom: 1px solid var(--line); }
+      td:last-child { text-align: right; width: 130px; }
+      .note {
+        color: #6d7568;
+        font-size: 13px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px dashed var(--line);
+      }
+      #reveal { text-align: center; }
+      #reveal .label { color: #6d7568; font-size: 14px; margin: 0 0 6px; }
+      #match {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 40px;
+        line-height: 1.15;
+        color: var(--berry);
+        margin: 0 0 18px;
         word-break: break-word;
       }
-      .hidden { display: none; }
+      .letter {
+        background: #fffdf7;
+        border: 1px solid var(--line);
+        border-left: 5px solid var(--gold);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 0 0 16px;
+        text-align: left;
+      }
+      .letter h2 { margin: 0 0 6px; font-size: 13px; color: var(--pine); text-transform: uppercase; letter-spacing: .6px; }
+      .letter p { margin: 0; color: #4e584c; }
+      .hidden { display: none !important; }
+      footer { text-align: center; color: #8a9184; font-size: 12px; margin-top: 18px; }
+      @media (max-width: 520px) {
+        .card { padding: 22px 18px 26px; }
+        h1 { font-size: 30px; }
+        .wish-row { align-items: stretch; flex-direction: column; gap: 2px; }
+        .wish-row span { flex: none; }
+        #match { font-size: 32px; }
+      }
     </style>
   </head>
   <body>
+    <div id="snow" class="snow" aria-hidden="true"></div>
+
     <main>
-      <section id="organizer">
-        <h1>Secret Santa</h1>
-        <p class="lede">
-          Everyone gets a private link. Nobody sees anyone else's match — including this page,
-          because the links are computed in your browser and never uploaded.
-        </p>
+      <section id="organizer" class="card">
+        <header class="hero">
+          <svg class="flake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+            <path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1" />
+            <path d="M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3" />
+          </svg>
+          <h1>Secret Santa</h1>
+          <p class="lede">A little holiday magic, kept private. Add your people, write a hint for each, then send everyone their own secret link.</p>
+          <p class="rules">
+            <span>$20 max</span>
+            <span>digital or handmade</span>
+            <span>no addresses, no emails</span>
+          </p>
+        </header>
+
+        <fieldset>
+          <legend>Event details</legend>
+          <p><input id="event-name" type="text" placeholder="Event name, e.g. The Harper Family" /></p>
+          <div class="date-row">
+            <label for="exchange-date">Gift day</label>
+            <input id="exchange-date" type="date" />
+          </div>
+        </fieldset>
 
         <fieldset>
           <legend>Participants — one per line</legend>
@@ -102,21 +212,48 @@
           <textarea id="exclusions" placeholder="Ana - Ben&#10;Cleo - Dev"></textarea>
         </fieldset>
 
-        <button id="generate">Generate links</button>
+        <div id="wish-fields">
+          <p class="hint">Add names above to write a private hint for each person.</p>
+        </div>
+
+        <p class="actions" style="margin-top:18px">
+          <button id="generate">Wrap the gifts</button>
+          <button id="download" class="secondary small hidden">Download links (CSV)</button>
+        </p>
         <p class="status" id="status"></p>
-        <table><tbody id="results"></tbody></table>
-        <p class="note" id="links-note" hidden>
-          Each link <em>is</em> the secret — it contains that one assignment, encrypted. Send each
-          person only their own, then close this page. Nothing is stored.
+        <div id="results-wrap" class="hidden">
+          <table><tbody id="results"></tbody></table>
+          <p class="note">
+            Each link <em>is</em> the secret — it holds that one assignment, encrypted. Send each person
+            only their own link by DM, then close this page. Nothing is stored and nobody sees anyone else's match.
+          </p>
+        </div>
+      </section>
+
+      <section id="reveal" class="card hidden">
+        <header class="hero">
+          <svg class="flake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+            <path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1" />
+          </svg>
+        </header>
+        <p class="label">You are buying a gift for</p>
+        <p id="match">…</p>
+        <div class="letter" id="letter" hidden>
+          <h2>Their little hints</h2>
+          <p id="hint-text"></p>
+        </div>
+        <p class="rules" id="reveal-rules">
+          <span>$20 max</span>
+          <span id="reveal-day" hidden></span>
+        </p>
+        <p class="actions" style="margin-top:22px; justify-content:center">
+          <button id="start-over" class="secondary">Start over</button>
         </p>
       </section>
 
-      <section id="reveal" class="hidden">
-        <p class="label">You are buying a gift for</p>
-        <p id="match">…</p>
-        <button id="start-over">Start over</button>
-      </section>
+      <footer>Made with snowflakes &amp; secrecy.</footer>
     </main>
+
     <script type="module" src="./src/ui.js"></script>
   </body>
 </html>
