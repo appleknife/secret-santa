@@ -74,3 +74,22 @@ test("full five-person flow through the Supabase client and the real SQL", async
 test("a raw Postgres error is not leaked to the page", async () => {
   await assert.rejects(() => api.sendGift("y".repeat(30), "not-a-uuid", "z".repeat(30)), /Something went wrong/);
 });
+
+test("lost-link recovery through the Supabase client and the real SQL", async () => {
+  const made = await S.createGroup(api, { title: "Recovery pals", giftDay: "", name: "Don", wishlist: "", giftPref: "either" });
+  const secrets = [parsePrivateFragment(made.fragment)];
+  for (const n of ["Mia", "Kai", "Rin", "Sol"]) {
+    secrets.push(parsePrivateFragment((await S.joinGroup(api, made.code, { name: n, wishlist: "", giftPref: "either" })).fragment));
+  }
+  await S.drawNames(api, secrets[0]);
+  const kaiTarget = (await S.loadMe(api, secrets[2])).match.name;
+  const req = await S.requestNewLink(api, made.code, "Kai");
+  const kai = parsePrivateFragment(req.fragment);
+  assert.equal((await api.linkStatus(kai.token)).status, "pending");
+  const kaiId = (await S.loadMe(api, secrets[0])).participants.find((p) => p.name === "Kai").id;
+  await api.approveNewLink(secrets[0].token, kaiId, true);
+  for (const i of [0, 1, 3, 4]) await S.loadMe(api, secrets[i]);
+  const k = await S.loadMe(api, kai);
+  assert.equal(k.match.name, kaiTarget);
+  assert.equal(k.recovery, null);
+});

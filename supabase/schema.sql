@@ -69,10 +69,26 @@ create table if not exists santa.gifts (
 create index if not exists gifts_recipient on santa.gifts (recipient_id);
 create index if not exists gifts_sender on santa.gifts (sender_tag);
 
+-- lost-link recovery: a person asks for a new link (their browser makes the new
+-- key), the group starter approves it, and the others' browsers each send them
+-- their own target sealed to the new key so they can work out their match.
+alter table santa.participants add column if not exists pending_key jsonb;
+alter table santa.participants add column if not exists pending_token_hash bytea;
+alter table santa.participants add column if not exists pending_at timestamptz;
+alter table santa.participants add column if not exists recovering boolean not null default false;
+
+create table if not exists santa.match_votes (
+  for_id    uuid not null references santa.participants (id) on delete cascade,
+  voter_id  uuid not null references santa.participants (id) on delete cascade,
+  sealed    text not null check (char_length(sealed) <= 4000),
+  primary key (for_id, voter_id)
+);
+
 alter table santa.events       enable row level security;
 alter table santa.participants enable row level security;
 alter table santa.assignments  enable row level security;
 alter table santa.gifts        enable row level security;
+alter table santa.match_votes  enable row level security;
 revoke all on all tables in schema santa from public;
 
 -- ───────────────────────────── helpers (not callable from the web) ─────────
@@ -206,11 +222,21 @@ begin
                                 'cap_usd', v.cap_usd, 'status', v.status, 'drawn_at', v.drawn_at,
                                 'gifts_open', v_open),
     'me', jsonb_build_object('id', m.id, 'name', m.name, 'wishlist', m.wishlist,
-                             'gift_pref', m.gift_pref, 'is_owner', v.owner_id = m.id),
+                             'gift_pref', m.gift_pref, 'is_owner', v.owner_id = m.id,
+                             'recovering', m.recovering),
     'participants', coalesce((select jsonb_agg(jsonb_build_object(
         'id', p.id, 'name', p.name, 'wishlist', p.wishlist, 'gift_pref', p.gift_pref,
-        'public_key', p.public_key, 'is_owner', v.owner_id = p.id) order by p.created_at)
+        'public_key', p.public_key, 'is_owner', v.owner_id = p.id,
+        'recovering', p.recovering,
+        'pending', case when v.owner_id = m.id then p.pending_token_hash is not null else false end)
+        order by p.created_at)
       from santa.participants p where p.event_id = v.id), '[]'::jsonb),
+    'votes_cast', coalesce((select jsonb_agg(mv.for_id) from santa.match_votes mv
+                            where mv.voter_id = m.id), '[]'::jsonb),
+    'recovery', case when m.recovering then jsonb_build_object(
+        'needed', (select count(*) - 1 from santa.participants where event_id = v.id),
+        'votes', coalesce((select jsonb_agg(mv.sealed) from santa.match_votes mv
+                           where mv.for_id = m.id), '[]'::jsonb)) end,
     'assignment', (select a.sealed from santa.assignments a
                    where a.event_id = v.id and a.giver_id = m.id),
     'gifts_received', coalesce((select jsonb_agg(jsonb_build_object(
@@ -356,6 +382,124 @@ begin
   delete from santa.events where id = v.id;
 end $$;
 
+-- Someone who lost their link asks for a new one. Their browser made the new
+-- key and token; nothing changes until the group starter approves.
+create or replace function public.santa_request_new_link(
+  p_code text, p_name text, p_public_key jsonb, p_token text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v santa.events; p santa.participants; v_owner text;
+begin
+  perform santa.check_key(p_public_key);
+  if char_length(coalesce(p_token, '')) < 20 then
+    raise exception 'Bad token.' using errcode = 'P0001';
+  end if;
+  select * into v from santa.events where code = p_code;
+  if not found then
+    raise exception 'We could not find that group. Check the link?' using errcode = 'P0001';
+  end if;
+  select * into p from santa.participants
+   where event_id = v.id and lower(name) = lower(pg_catalog.btrim(p_name)) for update;
+  if not found then
+    raise exception 'Nobody in this group has that name.' using errcode = 'P0001';
+  end if;
+  if p.id = v.owner_id then
+    raise exception 'The person who started the group can''t get a new link this way, because nobody else can approve it.' using errcode = 'P0001';
+  end if;
+  update santa.participants
+     set pending_key = p_public_key, pending_token_hash = santa.hash_token(p_token), pending_at = now()
+   where id = p.id;
+  select name into v_owner from santa.participants where id = v.owner_id;
+  return jsonb_build_object('owner_name', v_owner);
+end $$;
+
+-- What a new, not-yet-approved link should show.
+create or replace function public.santa_link_status(p_token text)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare h bytea := santa.hash_token(coalesce(p_token, '')); p santa.participants; v santa.events;
+begin
+  if exists (select 1 from santa.participants where token_hash = h) then
+    return jsonb_build_object('status', 'active');
+  end if;
+  select * into p from santa.participants where pending_token_hash = h;
+  if not found then
+    return jsonb_build_object('status', 'unknown');
+  end if;
+  select * into v from santa.events where id = p.event_id;
+  return jsonb_build_object('status', 'pending', 'title', v.title, 'name', p.name,
+    'owner_name', (select name from santa.participants where id = v.owner_id));
+end $$;
+
+create or replace function public.santa_approve_new_link(p_token text, p_participant_id uuid, p_approve boolean)
+returns void language plpgsql security definer set search_path = '' as $$
+declare m santa.participants; v santa.events; p santa.participants;
+begin
+  m := santa.me(p_token);
+  select * into v from santa.events where id = m.event_id for update;
+  if v.owner_id is distinct from m.id then
+    raise exception 'Only the person who started the group can approve new links.' using errcode = 'P0001';
+  end if;
+  select * into p from santa.participants where id = p_participant_id and event_id = v.id for update;
+  if not found or p.pending_token_hash is null then
+    raise exception 'That request isn''t there anymore.' using errcode = 'P0001';
+  end if;
+  if not p_approve then
+    update santa.participants set pending_key = null, pending_token_hash = null, pending_at = null where id = p.id;
+    return;
+  end if;
+  update santa.participants
+     set token_hash = p.pending_token_hash, public_key = p.pending_key,
+         pending_key = null, pending_token_hash = null, pending_at = null,
+         recovering = (v.status = 'drawn')
+   where id = p.id;
+  delete from santa.assignments where giver_id = p.id;   -- sealed to the lost key
+  delete from santa.match_votes where for_id = p.id;     -- sealed to an older key
+end $$;
+
+-- Help someone with a new link find their match: send them your own target,
+-- sealed to their new key. Only they can open it.
+create or replace function public.santa_cast_vote(p_token text, p_for_id uuid, p_sealed text)
+returns void language plpgsql security definer set search_path = '' as $$
+declare m santa.participants; v santa.events;
+begin
+  m := santa.me(p_token);
+  select * into v from santa.events where id = m.event_id;
+  if v.status <> 'drawn' or m.recovering then
+    raise exception 'Not ready to help yet.' using errcode = 'P0001';
+  end if;
+  if p_for_id = m.id or not exists (select 1 from santa.participants
+       where id = p_for_id and event_id = v.id and recovering) then
+    raise exception 'Nobody needs that.' using errcode = 'P0001';
+  end if;
+  if char_length(coalesce(p_sealed, '')) not between 20 and 4000 then
+    raise exception 'Bad vote.' using errcode = 'P0001';
+  end if;
+  insert into santa.match_votes (for_id, voter_id, sealed) values (p_for_id, m.id, p_sealed)
+    on conflict (for_id, voter_id) do update set sealed = excluded.sealed;
+end $$;
+
+-- Once everyone else has helped, store the recovered match sealed to the new key.
+create or replace function public.santa_restore_match(p_token text, p_sealed text)
+returns void language plpgsql security definer set search_path = '' as $$
+declare m santa.participants; v_need int; v_have int;
+begin
+  m := santa.me(p_token);
+  if not m.recovering then
+    raise exception 'Your match isn''t missing.' using errcode = 'P0001';
+  end if;
+  select count(*) - 1 into v_need from santa.participants where event_id = m.event_id;
+  select count(*) into v_have from santa.match_votes where for_id = m.id;
+  if v_have < v_need then
+    raise exception 'Still waiting for everyone to open the app.' using errcode = 'P0001';
+  end if;
+  if char_length(coalesce(p_sealed, '')) not between 20 and 4000 then
+    raise exception 'Bad match.' using errcode = 'P0001';
+  end if;
+  insert into santa.assignments (event_id, giver_id, sealed) values (m.event_id, m.id, p_sealed)
+    on conflict (event_id, giver_id) do update set sealed = excluded.sealed;
+  update santa.participants set recovering = false where id = m.id;
+  delete from santa.match_votes where for_id = m.id;
+end $$;
+
 -- lock every function down, then open exactly the API to the website roles
 do $$
 declare f text;
@@ -371,7 +515,12 @@ begin
     'santa_send_gift(text,uuid,text)',
     'santa_unsend_gift(text,uuid)',
     'santa_open_gift(text,uuid)',
-    'santa_delete_event(text)'
+    'santa_delete_event(text)',
+    'santa_request_new_link(text,text,jsonb,text)',
+    'santa_link_status(text)',
+    'santa_approve_new_link(text,uuid,boolean)',
+    'santa_cast_vote(text,uuid,text)',
+    'santa_restore_match(text,text)'
   ] loop
     execute format('revoke all on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated', f);

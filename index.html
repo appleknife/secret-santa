@@ -1279,6 +1279,32 @@
       .my-groups .chip-x { align-self: center; }
       button.danger-btn { background-image: linear-gradient(180deg, #8f2430, #5e1620); }
       details.danger summary { color: var(--cranberry-deep); }
+      select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid #e6dac4;
+        border-radius: 14px;
+        background: #fffdf8;
+        color: var(--ink);
+        font: inherit;
+        font-family: var(--body);
+      }
+      select:focus { outline: none; border-color: var(--pine); box-shadow: 0 0 0 4px rgba(47, 107, 82, .14); }
+      .request-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+      .request-list li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        background: #fffdf8;
+      }
+      .request-list b { flex: 1; min-width: 120px; font-family: var(--display); font-weight: 600; color: var(--pine-dark); }
+      .recovering { text-align: center; padding: 6px 4px; }
+      .recover-icon { margin: 0; font-size: 34px; }
+      .dots { margin: 10px 0 0; font-size: 22px; letter-spacing: 6px; }
 
       /* the envelope */
       .match-panel { text-align: center; }
@@ -1749,6 +1775,43 @@
         <p class="actions"><button type="submit">Join the group ✨</button></p>
         <p class="status" data-status role="status"></p>
       </form>
+      <details class="panel fold" data-lost>
+        <summary>🔑 Already joined but lost your private link?</summary>
+        <form data-lost-form class="stack" novalidate>
+          <p class="small">
+            Pick your name to make a new link. The person who started the group has to approve it, so nobody
+            else can take your spot. Your Secret Santa match is kept.
+          </p>
+          <label class="field">
+            <span>I'm…</span>
+            <select name="who" data-who required></select>
+          </label>
+          <p class="actions"><button type="submit" class="secondary">Make me a new link</button></p>
+          <p class="status" data-lost-status role="status"></p>
+        </form>
+      </details>
+    </template>
+
+    <template id="tpl-pending">
+      <div class="invite">
+        <p class="eyebrow">New link for <b data-name></b> in</p>
+        <h2 class="group-name" data-title></h2>
+      </div>
+      <div class="callout gold">
+        <h3>⏳ Waiting for <span data-owner></span> to approve</h3>
+        <p>
+          Let <b data-owner></b> know you asked for a new link (a quick message is enough). Once they tap Approve, this
+          page opens by itself. Your old link will stop working.
+        </p>
+      </div>
+      <div class="callout gold save-link">
+        <h3>📌 Save this new link now</h3>
+        <p>This is your new private link. Keep it somewhere safe this time!</p>
+        <div class="copy-row">
+          <input type="text" readonly data-private-link aria-label="Your new private link" />
+          <button type="button" class="small" data-copy-private>Copy</button>
+        </div>
+      </div>
     </template>
 
     <template id="tpl-me">
@@ -1770,6 +1833,15 @@
         </div>
         <p class="small">Paste it into your notes or bookmark this page. It's also remembered on this device.</p>
         <p class="actions"><button type="button" class="secondary small" data-saved>I've saved it ✓</button></p>
+      </div>
+
+      <div class="callout gold" data-requests hidden>
+        <h3>🔑 New link requests</h3>
+        <p class="small">
+          Only approve if you know it's really them (for example, they told you in your group chat). Their old link
+          stops working, and they keep the same Secret Santa match.
+        </p>
+        <ul class="request-list" data-request-list></ul>
       </div>
 
       <section class="panel" data-lobby hidden>
@@ -1815,6 +1887,12 @@
           <p class="rules"><span>🎁 $20 max</span><span data-giftday hidden></span></p>
         </div>
         <p class="callout" data-match-error hidden></p>
+        <div class="recovering" data-recovering hidden>
+          <p class="recover-icon" aria-hidden="true">🔎</p>
+          <h3 class="panel-title">Getting your match back…</h3>
+          <p class="muted" data-recover-text></p>
+          <p class="dots" data-recover-dots aria-hidden="true"></p>
+        </div>
       </section>
 
       <section class="panel" data-send hidden>

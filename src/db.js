@@ -54,6 +54,14 @@ export function supabaseBackend(url, key) {
     unsendGift: (token, giftId) => rpc("santa_unsend_gift", { p_token: token, p_gift_id: giftId }),
     openGift: (token, giftId) => rpc("santa_open_gift", { p_token: token, p_gift_id: giftId }),
     deleteEvent: (token) => rpc("santa_delete_event", { p_token: token }),
+    requestNewLink: (a) => rpc("santa_request_new_link", {
+      p_code: a.code, p_name: a.name, p_public_key: a.publicKey, p_token: a.token,
+    }),
+    linkStatus: (token) => rpc("santa_link_status", { p_token: token }),
+    approveNewLink: (token, id, approve) =>
+      rpc("santa_approve_new_link", { p_token: token, p_participant_id: id, p_approve: approve }),
+    castVote: (token, forId, sealed) => rpc("santa_cast_vote", { p_token: token, p_for_id: forId, p_sealed: sealed }),
+    restoreMatch: (token, sealed) => rpc("santa_restore_match", { p_token: token, p_sealed: sealed }),
   };
 }
 
@@ -86,8 +94,9 @@ function checkName(name) {
 export function demoBackend(storage, now = () => new Date()) {
   const KEY = "secret-santa-demo-v1";
   const load = () => {
-    try { return JSON.parse(storage.getItem(KEY)) || { events: [], participants: [], assignments: [], gifts: [] }; }
-    catch { return { events: [], participants: [], assignments: [], gifts: [] }; }
+    const empty = { events: [], participants: [], assignments: [], gifts: [], votes: [] };
+    try { return { ...empty, ...(JSON.parse(storage.getItem(KEY)) || {}) }; }
+    catch { return empty; }
   };
   const save = (db) => storage.setItem(KEY, JSON.stringify(db));
 
@@ -155,10 +164,18 @@ export function demoBackend(storage, now = () => new Date()) {
       return {
         event: { code: ev.code, title: ev.title, gift_day: ev.gift_day, cap_usd: ev.cap_usd,
                  status: ev.status, drawn_at: ev.drawn_at, gifts_open: open },
-        me: { id: m.id, name: m.name, wishlist: m.wishlist, gift_pref: m.gift_pref, is_owner: ev.owner_id === m.id },
+        me: { id: m.id, name: m.name, wishlist: m.wishlist, gift_pref: m.gift_pref, is_owner: ev.owner_id === m.id,
+              recovering: Boolean(m.recovering) },
         participants: db.participants.filter((p) => p.event_id === ev.id).map((p) => ({
           id: p.id, name: p.name, wishlist: p.wishlist, gift_pref: p.gift_pref,
-          public_key: p.public_key, is_owner: ev.owner_id === p.id })),
+          public_key: p.public_key, is_owner: ev.owner_id === p.id,
+          recovering: Boolean(p.recovering),
+          pending: ev.owner_id === m.id ? Boolean(p.pending_token_hash) : false })),
+        votes_cast: db.votes.filter((x) => x.voter_id === m.id).map((x) => x.for_id),
+        recovery: m.recovering ? {
+          needed: db.participants.filter((p) => p.event_id === ev.id).length - 1,
+          votes: db.votes.filter((x) => x.for_id === m.id).map((x) => x.sealed),
+        } : null,
         assignment: a ? a.sealed : null,
         gifts_received: db.gifts.filter((g) => g.recipient_id === m.id).map((g) => ({
           id: g.id, sent_at: g.created_at, opened_at: g.opened_at, sealed: open ? g.sealed : null })),
@@ -243,6 +260,75 @@ export function demoBackend(storage, now = () => new Date()) {
       db.participants = db.participants.filter((p) => !gone.has(p.id));
       db.assignments = db.assignments.filter((a) => a.event_id !== ev.id);
       db.gifts = db.gifts.filter((g) => g.event_id !== ev.id);
+      db.votes = db.votes.filter((x) => !gone.has(x.for_id));
+      save(db);
+    },
+    async requestNewLink(a) {
+      checkKey(a.publicKey);
+      if (String(a.token || "").length < 20) fail("Bad token.");
+      const db = load();
+      const ev = db.events.find((e) => e.code === a.code) || fail("We could not find that group. Check the link?");
+      const name = String(a.name || "").trim().toLowerCase();
+      const p = db.participants.find((x) => x.event_id === ev.id && x.name.toLowerCase() === name) ||
+        fail("Nobody in this group has that name.");
+      if (p.id === ev.owner_id) {
+        fail("The person who started the group can't get a new link this way, because nobody else can approve it.");
+      }
+      p.pending_key = a.publicKey;
+      p.pending_token_hash = await sha256(a.token);
+      save(db);
+      return { owner_name: db.participants.find((x) => x.id === ev.owner_id).name };
+    },
+    async linkStatus(token) {
+      const db = load();
+      const h = await sha256(String(token || ""));
+      if (db.participants.some((p) => p.token_hash === h)) return { status: "active" };
+      const p = db.participants.find((x) => x.pending_token_hash === h);
+      if (!p) return { status: "unknown" };
+      const ev = db.events.find((e) => e.id === p.event_id);
+      return { status: "pending", title: ev.title, name: p.name,
+               owner_name: db.participants.find((x) => x.id === ev.owner_id).name };
+    },
+    async approveNewLink(token, id, approve) {
+      const db = load();
+      const m = await me(db, token);
+      const ev = eventOf(db, m);
+      if (ev.owner_id !== m.id) fail("Only the person who started the group can approve new links.");
+      const p = db.participants.find((x) => x.id === id && x.event_id === ev.id);
+      if (!p || !p.pending_token_hash) fail("That request isn't there anymore.");
+      if (approve) {
+        p.token_hash = p.pending_token_hash;
+        p.public_key = p.pending_key;
+        p.recovering = ev.status === "drawn";
+        db.assignments = db.assignments.filter((x) => x.giver_id !== p.id);
+        db.votes = db.votes.filter((x) => x.for_id !== p.id);
+      }
+      p.pending_key = null;
+      p.pending_token_hash = null;
+      save(db);
+    },
+    async castVote(token, forId, sealed) {
+      const db = load();
+      const m = await me(db, token);
+      const ev = eventOf(db, m);
+      if (ev.status !== "drawn" || m.recovering) fail("Not ready to help yet.");
+      if (forId === m.id || !db.participants.some((p) => p.id === forId && p.event_id === ev.id && p.recovering)) {
+        fail("Nobody needs that.");
+      }
+      db.votes = db.votes.filter((x) => !(x.for_id === forId && x.voter_id === m.id));
+      db.votes.push({ for_id: forId, voter_id: m.id, sealed });
+      save(db);
+    },
+    async restoreMatch(token, sealed) {
+      const db = load();
+      const m = await me(db, token);
+      if (!m.recovering) fail("Your match isn't missing.");
+      const need = db.participants.filter((p) => p.event_id === m.event_id).length - 1;
+      if (db.votes.filter((x) => x.for_id === m.id).length < need) fail("Still waiting for everyone to open the app.");
+      db.assignments = db.assignments.filter((x) => x.giver_id !== m.id);
+      db.assignments.push({ event_id: m.event_id, giver_id: m.id, sealed });
+      m.recovering = false;
+      db.votes = db.votes.filter((x) => x.for_id !== m.id);
       save(db);
     },
   };

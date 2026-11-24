@@ -168,3 +168,68 @@ test("owner deletes the group; everything cascades", async () => {
     assert.equal((await db.query(`select count(*)::int n from santa.${tbl}`)).rows[0].n, 0, tbl);
   }
 });
+
+test("lost link: request, owner approves, others vote, match restored", async () => {
+  const { rpc } = await fresh();
+  const { code, t } = await group(rpc, 5);
+  const ps = (await rpc("santa_my_event", { p_token: t[0] })).participants;
+  await rpc("santa_submit_draw", { p_token: t[0], p_rows: ps.map((p) => ({ giver_id: p.id, sealed: "x".repeat(40) })) });
+
+  const newTok = tok();
+  const newKey = key();
+  await assert.rejects(() => rpc("santa_request_new_link", { p_code: code, p_name: "nobody", p_public_key: newKey, p_token: newTok }), /Nobody in this group/);
+  await assert.rejects(() => rpc("santa_request_new_link", { p_code: code, p_name: "P0", p_public_key: newKey, p_token: newTok }), /started the group/);
+  const r = await rpc("santa_request_new_link", { p_code: code, p_name: "p2", p_public_key: newKey, p_token: newTok });
+  assert.equal(r.owner_name, "P0");
+  assert.equal((await rpc("santa_link_status", { p_token: newTok })).status, "pending");
+  assert.equal((await rpc("santa_link_status", { p_token: t[1] })).status, "active");
+  assert.equal((await rpc("santa_link_status", { p_token: tok() })).status, "unknown");
+  await assert.rejects(() => rpc("santa_my_event", { p_token: newTok }), /not valid/);
+
+  // only the owner sees the pending flag, only the owner approves
+  assert.equal((await rpc("santa_my_event", { p_token: t[0] })).participants[2].pending, true);
+  assert.equal((await rpc("santa_my_event", { p_token: t[1] })).participants[2].pending, false);
+  await assert.rejects(() => rpc("santa_approve_new_link", { p_token: t[1], p_participant_id: ps[2].id, p_approve: true }), /Only the person/);
+  await rpc("santa_approve_new_link", { p_token: t[0], p_participant_id: ps[2].id, p_approve: true });
+
+  await assert.rejects(() => rpc("santa_my_event", { p_token: t[2] }), /not valid/, "old link stops working");
+  let me = await rpc("santa_my_event", { p_token: newTok });
+  assert.equal(me.me.recovering, true);
+  assert.equal(me.assignment, null);
+  assert.equal(me.recovery.needed, 4);
+  assert.deepEqual(me.recovery.votes, []);
+  assert.deepEqual(me.participants[2].public_key, newKey);
+
+  await assert.rejects(() => rpc("santa_restore_match", { p_token: newTok, p_sealed: "m".repeat(40) }), /Still waiting/);
+  await assert.rejects(() => rpc("santa_cast_vote", { p_token: newTok, p_for_id: ps[2].id, p_sealed: "v".repeat(40) }), /Not ready/);
+  await assert.rejects(() => rpc("santa_cast_vote", { p_token: t[1], p_for_id: ps[3].id, p_sealed: "v".repeat(40) }), /Nobody needs/);
+  for (const i of [0, 1, 3, 4]) {
+    await rpc("santa_cast_vote", { p_token: t[i], p_for_id: ps[2].id, p_sealed: `vote${i}`.padEnd(40, "v") });
+  }
+  await rpc("santa_cast_vote", { p_token: t[1], p_for_id: ps[2].id, p_sealed: "again".padEnd(40, "v") }); // re-vote is fine
+  assert.deepEqual((await rpc("santa_my_event", { p_token: t[1] })).votes_cast, [ps[2].id]);
+  me = await rpc("santa_my_event", { p_token: newTok });
+  assert.equal(me.recovery.votes.length, 4);
+
+  await rpc("santa_restore_match", { p_token: newTok, p_sealed: "m".repeat(40) });
+  me = await rpc("santa_my_event", { p_token: newTok });
+  assert.equal(me.me.recovering, false);
+  assert.equal(me.assignment, "m".repeat(40));
+  assert.equal(me.recovery, null);
+});
+
+test("lost link before the draw just swaps the key; decline clears the request", async () => {
+  const { rpc } = await fresh();
+  const { code, t } = await group(rpc, 3);
+  const ps = (await rpc("santa_my_event", { p_token: t[0] })).participants;
+  const a = tok();
+  await rpc("santa_request_new_link", { p_code: code, p_name: "P1", p_public_key: key(), p_token: a });
+  await rpc("santa_approve_new_link", { p_token: t[0], p_participant_id: ps[1].id, p_approve: false });
+  assert.equal((await rpc("santa_link_status", { p_token: a })).status, "unknown");
+  assert.equal((await rpc("santa_my_event", { p_token: t[1] })).me.name, "P1", "old link still works after decline");
+  const b = tok();
+  await rpc("santa_request_new_link", { p_code: code, p_name: "P1", p_public_key: key(), p_token: b });
+  await rpc("santa_approve_new_link", { p_token: t[0], p_participant_id: ps[1].id, p_approve: true });
+  const me = await rpc("santa_my_event", { p_token: b });
+  assert.equal(me.me.recovering, false);
+});

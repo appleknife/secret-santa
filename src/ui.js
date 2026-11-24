@@ -11,7 +11,7 @@
 import * as config from "./config.js";
 import { makeBackend } from "./db.js";
 import { parsePrivateFragment } from "./keys.js";
-import { createGroup, joinGroup, loadMe, drawNames, sendGift, overCap, CAP_USD } from "./santa.js";
+import { createGroup, joinGroup, loadMe, drawNames, sendGift, overCap, requestNewLink, CAP_USD } from "./santa.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -352,7 +352,43 @@ async function renderJoin(code) {
       setStatus(status, err.message, true);
     }
   });
+
+  const lost = $("[data-lost-form]", frag);
+  const who = $("[data-who]", lost);
+  who.append(el("option", { value: "" }, "Choose your name…"));
+  for (const n of preview.names) who.append(el("option", { value: n }, n));
+  if (preview.status !== "open") $("[data-lost]", frag).open = true;
+  lost.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = $("[data-lost-status]", lost);
+    if (!who.value) return setStatus(status, "Pick your name first.", true);
+    const button = $("button[type=submit]", lost);
+    try {
+      const made = await busy(button, "Making your link…", () => requestNewLink(db, code, who.value));
+      rememberGroup({ fragment: made.fragment, title: preview.title, name: who.value });
+      location.hash = made.fragment;
+    } catch (err) {
+      setStatus(status, err.message, true);
+    }
+  });
   view.replaceChildren(frag);
+}
+
+/** A new link that the group starter hasn't approved yet. Checks back by itself. */
+function renderPending(fragment, info) {
+  lede.textContent = "";
+  const frag = template("tpl-pending");
+  $("[data-name]", frag).textContent = info.name;
+  $("[data-title]", frag).textContent = info.title;
+  for (const o of $$("[data-owner]", frag)) o.textContent = info.owner_name;
+  $("[data-private-link]", frag).value = privateLink(fragment);
+  const c = $("[data-copy-private]", frag);
+  c.addEventListener("click", () => copy(privateLink(fragment), c));
+  view.replaceChildren(frag);
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(() => {
+    if (location.hash === fragment) renderMe(fragment, { quiet: true });
+  }, 10000);
 }
 
 /* ───────────────────────────── my page ───────────────────────────── */
@@ -369,6 +405,12 @@ async function renderMe(fragment, { quiet = false } = {}) {
   try {
     state = await loadMe(db, secret);
   } catch (err) {
+    if (/not valid/.test(err.message)) {
+      try {
+        const info = await db.linkStatus(secret.token);
+        if (info.status === "pending") return renderPending(fragment, info);
+      } catch { /* fall through to the message below */ }
+    }
     const saved = savedGroups().some((g) => g.fragment === fragment);
     showMessage(saved && /not valid/.test(err.message)
       ? "This group doesn't exist anymore. It may have been deleted by the person who started it."
@@ -404,7 +446,10 @@ async function renderMe(fragment, { quiet = false } = {}) {
   else fillDrawn(frag, state, secret, fragment);
   fillWishEditor(frag, state, secret);
 
-  if (me.is_owner) fillSettings(frag, state, secret, fragment);
+  if (me.is_owner) {
+    fillSettings(frag, state, secret, fragment);
+    fillRequests(frag, state, secret, fragment);
+  }
   $("[data-refresh]", frag).addEventListener("click", () => renderMe(fragment));
   $("[data-forget]", frag).addEventListener("click", (e) => {
     const b = e.currentTarget;
@@ -423,7 +468,7 @@ async function renderMe(fragment, { quiet = false } = {}) {
   if (quiet) window.scrollTo(0, y);
 
   clearTimeout(pollTimer);
-  if (event.status === "open") {
+  if (event.status === "open" || me.recovering) {
     pollTimer = setTimeout(() => {
       if (location.hash === fragment && !document.hidden && !view.contains(document.activeElement)) {
         renderMe(fragment, { quiet: true });
@@ -504,7 +549,17 @@ function fillDrawn(frag, state, secret, fragment) {
   const panel = $("[data-match]", frag);
   panel.hidden = false;
 
-  if (!match || match.error) {
+  if (!match && state.recovery) {
+    $("[data-envelope]", panel).hidden = true;
+    const box = $("[data-recovering]", panel);
+    box.hidden = false;
+    const { have, needed, problem } = state.recovery;
+    $("[data-recover-text]", box).textContent = problem
+      ? "Something doesn't add up, possibly because someone else also lost their link. Ask the person who started the group for help."
+      : `${have} of ${needed} friends have helped so far. Each time someone else opens their page, their browser ` +
+        "quietly helps work out your match, and nobody learns anything they shouldn't. This page updates by itself.";
+    $("[data-recover-dots]", box).textContent = "🎁".repeat(have) + "▫️".repeat(Math.max(0, needed - have));
+  } else if (!match || match.error) {
     $("[data-envelope]", panel).hidden = true;
     const msg = $("[data-match-error]", panel);
     msg.hidden = false;
@@ -688,7 +743,7 @@ function giftCard(g, secret, fragment) {
     body.append(el("p", { class: "gift-title" }, "🎨 A drawing, just for you"));
     if (gift.image && gift.image.startsWith("data:image/")) body.append(el("img", { class: "art", src: gift.image, alt: "A drawing from your Secret Santa" }));
   } else {
-    body.append(el("p", { class: "gift-title" }, "💌 A note"));
+    body.append(el("p", { class: "gift-title" }, gift.locked ? "🔒 A gift for your old link" : "💌 A note"));
   }
   if (gift.link && /^https?:\/\//i.test(gift.link)) {
     body.append(el("p", {}, el("a", { href: gift.link, target: "_blank", rel: "noopener noreferrer" }, gift.kind === "giftcard" ? "Redeem it here ↗" : "Open the link ↗")));
@@ -697,6 +752,30 @@ function giftCard(g, secret, fragment) {
   body.append(el("p", { class: "from" }, "— your Secret Santa ❄️"));
   li.append(body);
   return li;
+}
+
+function fillRequests(frag, state, secret, fragment) {
+  const waiting = state.participants.filter((p) => p.pending);
+  if (!waiting.length) return;
+  const box = $("[data-requests]", frag);
+  box.hidden = false;
+  const list = $("[data-request-list]", box);
+  for (const p of waiting) {
+    const yes = el("button", { type: "button", class: "small" }, "Approve");
+    const no = el("button", { type: "button", class: "secondary small" }, "Decline");
+    const li = el("li", {}, el("b", {}, `${p.name} asked for a new link`), yes, no);
+    const decide = (approve, button) => async () => {
+      try {
+        await busy(button, approve ? "Approving…" : "Declining…", () => db.approveNewLink(secret.token, p.id, approve));
+        renderMe(fragment, { quiet: true });
+      } catch (err) {
+        li.append(el("span", { class: "status error" }, err.message));
+      }
+    };
+    yes.addEventListener("click", decide(true, yes));
+    no.addEventListener("click", decide(false, no));
+    list.append(li);
+  }
 }
 
 function fillSettings(frag, state, secret, fragment) {

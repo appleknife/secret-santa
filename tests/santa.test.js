@@ -44,7 +44,10 @@ test("the stored data never contains a readable pairing", async () => {
   const stored = JSON.parse([...storage.raw.values()][0]);
   for (const a of stored.assignments) {
     assert.ok(a.sealed.startsWith("s1."));
-    assert.ok(!/receiver|Don|Mia|Kai|Rin|Sol/.test(a.sealed));
+    // ciphertext is base64url, so plaintext JSON (quotes, braces, field names) can't hide in it;
+    // short names like "Kai" can appear by pure chance in random base64, so don't test for those
+    assert.match(a.sealed, /^s1(\.[A-Za-z0-9_-]+){3}$/);
+    assert.ok(!/receiver_|[{}":]/.test(a.sealed));
   }
 });
 
@@ -120,4 +123,57 @@ test("only the group starter can delete the group, and it takes everything with 
   await db.deleteEvent(secrets[0].token);
   await assert.rejects(() => loadMe(db, secrets[2]), /not valid/);
   await assert.rejects(() => db.eventPreview(code), /could not find/);
+});
+
+test("lost link after the draw: new link, approval, everyone else helps, same match comes back", async () => {
+  const { db, secrets, code, names } = await fivePals();
+  await drawNames(db, secrets[0]);
+  const before = {};
+  for (let i = 0; i < 5; i++) before[names[i]] = (await loadMe(db, secrets[i])).match.name;
+
+  // Kai (index 2) lost his link
+  const { requestNewLink } = await import("../src/santa.js");
+  const req = await requestNewLink(db, code, "kai");
+  assert.equal(req.ownerName, "Don");
+  const kai = parsePrivateFragment(req.fragment);
+  assert.equal((await db.linkStatus(kai.token)).status, "pending");
+  const ownerView = await loadMe(db, secrets[0]);
+  assert.equal(ownerView.participants.find((p) => p.name === "Kai").pending, true);
+  await db.approveNewLink(secrets[0].token, ownerView.participants.find((p) => p.name === "Kai").id, true);
+
+  // Owner already voted during the loadMe above? No: Kai wasn't recovering yet.
+  let k = await loadMe(db, kai);
+  assert.equal(k.match, null);
+  assert.deepEqual(k.recovery, { have: 0, needed: 4 });
+
+  // the others open the app one by one; nobody but Kai's browser can read the votes
+  for (const i of [0, 1, 3]) await loadMe(db, secrets[i]);
+  k = await loadMe(db, kai);
+  assert.deepEqual(k.recovery, { have: 3, needed: 4 });
+  await loadMe(db, secrets[4]);                // the friend who was asleep
+  k = await loadMe(db, kai);
+  assert.equal(k.recovery, null);
+  assert.equal(k.match.name, before.Kai, "same target as before");
+  await assert.rejects(() => loadMe(db, secrets[2]), /not valid/, "old link is dead");
+
+  // nothing else changed for anyone
+  for (const i of [0, 1, 3, 4]) assert.equal((await loadMe(db, secrets[i])).match.name, before[names[i]]);
+});
+
+test("gifts sent to an old link explain themselves", async () => {
+  let clock = new Date("2026-12-21T12:00:00Z");
+  const { db, secrets, code, names } = await fivePals(() => clock);
+  await drawNames(db, secrets[0]);
+  const santaOfKai = await (async () => {
+    for (let i = 0; i < 5; i++) if ((await loadMe(db, secrets[i])).match.name === "Kai") return i;
+  })();
+  const giver = await loadMe(db, secrets[santaOfKai]);
+  await sendGift(db, secrets[santaOfKai], giver.match, { kind: "note", message: "hi Kai" });
+  const { requestNewLink } = await import("../src/santa.js");
+  const req = await requestNewLink(db, code, "Kai");
+  const kaiId = (await loadMe(db, secrets[0])).participants.find((p) => p.name === "Kai").id;
+  await db.approveNewLink(secrets[0].token, kaiId, true);
+  const k = await loadMe(db, parsePrivateFragment(req.fragment));
+  assert.equal(k.received[0].gift.locked, true);
+  assert.match(k.received[0].gift.message, /old private link/);
 });

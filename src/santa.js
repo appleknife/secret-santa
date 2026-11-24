@@ -33,7 +33,7 @@ export async function joinGroup(db, code, { name, wishlist, giftPref }) {
  * Everything for one person's page, with their match and gifts already opened.
  * @param {{token:string, privateKey:object}} secret  from parsePrivateFragment
  */
-export async function loadMe(db, secret) {
+export async function loadMe(db, secret, opts = {}) {
   const state = await db.myEvent(secret.token);
   const byId = new Map(state.participants.map((p) => [p.id, p]));
 
@@ -47,18 +47,62 @@ export async function loadMe(db, secret) {
     }
   }
 
+  // Help anyone who lost their link: tell them (sealed to their new key, so only
+  // they can read it) who *we* are buying for. Once everyone else has, their
+  // browser can work out the one person nobody else has.
+  if (match && !match.error && !state.me.recovering) {
+    for (const p of state.participants) {
+      if (!p.recovering || p.id === state.me.id || state.votes_cast.includes(p.id)) continue;
+      try {
+        await db.castVote(secret.token, p.id, await seal(JSON.stringify({ receiver_id: match.id }), p.public_key));
+      } catch {
+        /* not critical; we'll try again next visit */
+      }
+    }
+  }
+
+  let recovery = null;
+  if (state.me.recovering && state.recovery) {
+    const { needed, votes } = state.recovery;
+    recovery = { have: votes.length, needed };
+    if (votes.length >= needed && !opts.restored) {
+      const taken = new Set();
+      for (const v of votes) {
+        try { taken.add(JSON.parse(await open(v, secret.privateKey)).receiver_id); } catch { /* skip bad vote */ }
+      }
+      const left = state.participants.filter((p) => p.id !== state.me.id && !taken.has(p.id));
+      if (taken.size === needed && left.length === 1) {
+        const mine = byId.get(state.me.id).public_key;
+        const payload = JSON.stringify({ receiver_id: left[0].id, receiver_name: left[0].name });
+        await db.restoreMatch(secret.token, await seal(payload, mine));
+        return loadMe(db, secret, { restored: true });
+      }
+      recovery.problem = true;
+    }
+  }
+
   const received = [];
   for (const g of state.gifts_received) {
     let gift = null;
     if (g.sealed) {
       try { gift = JSON.parse(await open(g.sealed, secret.privateKey)); }
-      catch { gift = { kind: "note", message: "(This gift couldn't be unlocked.)" }; }
+      catch {
+        gift = { kind: "note", locked: true,
+                 message: "This gift was sent to an old private link, so it can't be opened. Your Secret Santa can send it again." };
+      }
     }
     received.push({ ...g, gift });
   }
 
   const sent = state.gifts_sent.map((g) => ({ ...g, recipient: byId.get(g.recipient_id) }));
-  return { ...state, match, received, sent };
+  return { ...state, match, received, sent, recovery };
+}
+
+/** Lost your link? Make a new one here; the group starter approves it. */
+export async function requestNewLink(db, code, name) {
+  const id = await identity();
+  const res = await db.requestNewLink({ code, name, publicKey: id.publicKey, token: id.token });
+  return { fragment: id.fragment, ownerName: res.owner_name };
 }
 
 /**
