@@ -1491,6 +1491,101 @@
       .sound-toggle.off::before { content: "✕ "; }
       .sound-toggle:hover { transform: translateY(-1px); }
       .corners svg { pointer-events: auto; }
+
+      /* ═══════════════════  polish pass (Nov 24)  ═══════════════════ */
+      /* no lone words on the last line */
+      .lede, .meta, .muted, .callout p, .panel-title, .group-name, .envelope-caption, .recovering p { text-wrap: balance; }
+
+      /* one clean border per form section (drop the dashed inner line) */
+      fieldset::before { display: none; }
+      fieldset::after { opacity: .35; }
+
+      /* ruled lines never lined up with the text, so they read as strike-throughs */
+      textarea { background-image: none !important; }
+      .letter {
+        background-image: linear-gradient(135deg, #fffdf8, #faf1df) !important;
+        padding: 20px 22px 18px;
+      }
+      .letter h2 { margin-bottom: 8px; }
+      .letter p + .pref { margin-top: 12px !important; padding-top: 10px; border-top: 1px dashed var(--line); }
+
+      /* calmer background: keep the warm glow, lose the muddy smudge */
+      body::after { opacity: .12; }
+
+      /* the main call to action sits under centred headings, so centre it */
+      [data-create] .actions, [data-join] .actions { justify-content: center; }
+      [data-create] .actions button, [data-join] .actions button { min-width: 220px; }
+      .who { text-align: center; }
+      .who .chips { justify-content: center; }
+      .steps + .band { margin-top: 18px; }
+
+      /* empty status lines shouldn't leave gaps at the bottom of panels */
+      .status:empty { display: none; }
+      .panel form.stack > .actions:last-of-type { margin-bottom: 0; }
+
+      /* inner pages: a compact header so the good stuff is on screen sooner */
+      body[data-route="inner"] .hero { margin-bottom: 6px; }
+      body[data-route="inner"] .lights { width: min(260px, 80%); margin-top: -14px; }
+      body[data-route="inner"] .mascot-ring { width: 84px; height: 84px; margin-bottom: 4px; }
+      body[data-route="inner"] .mascot { width: 70px; height: 70px; }
+      body[data-route="inner"] h1 { font-size: 30px; }
+      body[data-route="inner"] .title-rule { display: none; }
+      body[data-route="inner"] .invite { margin-bottom: 18px; }
+
+      /* gift type picker: an even segmented control */
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        padding: 4px;
+        border: 1.5px solid #e3d5bc;
+        border-radius: 999px;
+        background: #f7eedc;
+      }
+      .tabs button { border: 0; padding: 9px 6px; white-space: nowrap; background: transparent; }
+      .tabs button[aria-selected="false"]:hover { background: #fffdf8; transform: none; }
+
+      /* envelope: short label on the envelope, caption underneath */
+      .envelope-label { bottom: 18px; font-size: 15px; }
+      .envelope-caption { margin: 10px 0 2px; color: var(--ink-soft); font-size: 14px; }
+
+      /* gifts under the tree: presents, not boxes in boxes */
+      [data-inbox] .gift-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
+      .gift.wrapped, .gift.ready {
+        display: grid;
+        justify-items: center;
+        gap: 6px;
+        padding: 16px 12px 14px;
+        border: 1.5px dashed #e0cfa9;
+        background: radial-gradient(circle at 50% 30%, #fffaf0, #f7ecd6);
+      }
+      .gift.wrapped .gift-box, .gift.ready .gift-box { font-size: 44px; }
+      .gift.wrapped small, .gift.ready small { color: var(--ink-soft); font-size: 12.5px; font-weight: 700; }
+      .gift.ready .unwrap { width: auto; padding: 9px 18px; font-size: 14px; }
+
+      /* sound toggle: dressed for the evergreen night */
+      .sound-toggle {
+        border-color: rgba(217, 178, 95, .45);
+        background: rgba(19, 53, 40, .72);
+        color: #f4ead5;
+        font-family: var(--body);
+        font-weight: 700;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .25);
+      }
+      .sound-toggle::before { color: var(--gold); }
+      .sound-toggle.off { color: rgba(244, 234, 213, .6); }
+
+      @media (max-width: 560px) {
+        /* keep copy buttons beside their box */
+        .copy-row { flex-wrap: nowrap; }
+        .copy-row input { flex-basis: auto; font-size: 12px; padding-left: 12px; padding-right: 10px; }
+        .tabs button { font-size: 13px; padding: 9px 2px; }
+        body { padding-top: 50px; }
+        .sound-toggle { position: absolute; top: 10px; right: 12px; padding: 6px 11px; font-size: 11.5px; }
+        body[data-route="inner"] h1 { font-size: 26px; }
+        .gift-row .badge { margin-left: auto; }
+      }
     </style>
   </head>
   <body>
@@ -1871,8 +1966,9 @@
         <button type="button" class="envelope" data-envelope>
           <span class="envelope-flap" aria-hidden="true"></span>
           <span class="envelope-seal" aria-hidden="true">❄</span>
-          <span class="envelope-label">Names are drawn! Tap to open your envelope</span>
+          <span class="envelope-label">Tap to open ✉️</span>
         </button>
+        <p class="envelope-caption" data-envelope-caption>Names are drawn! Your match is inside. Only you can open it.</p>
         <div class="match-card" data-match-card hidden>
           <p class="label">You're the Secret Santa for</p>
           <div class="match-wrap">

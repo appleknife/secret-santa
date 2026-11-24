@@ -223,8 +223,9 @@ function daysUntil(iso) {
 function giftDayLine(iso) {
   if (!iso) return `$${CAP_USD} max`;
   const n = daysUntil(iso);
-  const when = n > 1 ? ` · ${n} days to go` : n === 1 ? " · tomorrow!" : n === 0 ? " · today! 🎄" : "";
-  return `Gift day: ${niceDate(iso)}${when} · $${CAP_USD} max`;
+  const keep = (t) => t.replace(/ /g, "\u00a0"); // never break "December 20" across lines
+  const when = n > 1 ? ` · ${keep(`${n} days to go`)}` : n === 1 ? " · tomorrow!" : n === 0 ? ` · ${keep("today! 🎄")}` : "";
+  return `Gift day: ${keep(niceDate(iso))}${when} · ${keep(`$${CAP_USD} max`)}`;
 }
 
 const PREF = { handmade: "🎨 Would love something handmade", digital: "💳 Would love a digital gift", either: "✨ Happy with handmade or digital" };
@@ -481,7 +482,6 @@ async function renderMe(fragment, { quiet = false } = {}) {
 
 function fillLobby(frag, state, secret, fragment) {
   const { event, me, participants } = state;
-  lede.textContent = "Share the join link with your friends. Once everyone's in, names get drawn.";
   const lobby = $("[data-lobby]", frag);
   lobby.hidden = false;
   $("[data-count]", lobby).textContent = `(${participants.length})`;
@@ -545,12 +545,12 @@ function fillLobby(frag, state, secret, fragment) {
 
 function fillDrawn(frag, state, secret, fragment) {
   const { event, match } = state;
-  lede.textContent = "Names are drawn! Your match is secret. Only you can see it.";
   const panel = $("[data-match]", frag);
   panel.hidden = false;
 
   if (!match && state.recovery) {
     $("[data-envelope]", panel).hidden = true;
+    $("[data-envelope-caption]", panel).hidden = true;
     const box = $("[data-recovering]", panel);
     box.hidden = false;
     const { have, needed, problem } = state.recovery;
@@ -561,6 +561,7 @@ function fillDrawn(frag, state, secret, fragment) {
     $("[data-recover-dots]", box).textContent = "🎁".repeat(have) + "▫️".repeat(Math.max(0, needed - have));
   } else if (!match || match.error) {
     $("[data-envelope]", panel).hidden = true;
+    $("[data-envelope-caption]", panel).hidden = true;
     const msg = $("[data-match-error]", panel);
     msg.hidden = false;
     msg.textContent = (match && match.error) || "We couldn't find your match.";
@@ -580,6 +581,7 @@ function fillDrawn(frag, state, secret, fragment) {
     const sendBox = $("[data-send]", frag);
     const reveal = () => {
       $("[data-envelope]", panel).hidden = true;
+      $("[data-envelope-caption]", panel).hidden = true;
       $("[data-match-card]", panel).hidden = false;
       sendBox.hidden = Boolean(match.left);
     };
@@ -707,7 +709,11 @@ function fillInbox(frag, state, secret, fragment) {
   if (!event.gifts_open) {
     const n = received.length;
     note.textContent = `${n} ${n === 1 ? "gift is" : "gifts are"} waiting for you! ${n === 1 ? "It unwraps" : "They unwrap"} on ${niceDate(event.gift_day)}. No peeking. 👀`;
-    for (let i = 0; i < n; i++) list.append(el("li", { class: "gift wrapped" }, el("span", { class: "gift-box", "aria-hidden": "true" }, "🎁")));
+    for (let i = 0; i < n; i++) {
+      list.append(el("li", { class: "gift wrapped" },
+        el("span", { class: "gift-box", "aria-hidden": "true" }, "🎁"),
+        el("small", {}, `Opens ${niceDate(event.gift_day, { month: "short", day: "numeric" })}`)));
+    }
     return;
   }
   note.textContent = "Gift day is here! 🎄";
@@ -717,7 +723,9 @@ function fillInbox(frag, state, secret, fragment) {
 function giftCard(g, secret, fragment) {
   const li = el("li", { class: "gift" });
   if (!g.opened_at) {
-    const b = el("button", { type: "button", class: "unwrap" }, el("span", { class: "gift-box", "aria-hidden": "true" }, "🎁"), " Unwrap");
+    li.classList.add("ready");
+    const b = el("button", { type: "button", class: "unwrap" }, "Unwrap 🎀");
+    li.append(el("span", { class: "gift-box", "aria-hidden": "true" }, "🎁"), el("small", {}, "A gift for you!"));
     b.addEventListener("click", async () => {
       li.classList.add("unwrapping");
       try { await db.openGift(secret.token, g.id); } catch { /* opening still works locally */ }
@@ -892,6 +900,7 @@ function addSnow() {
 
 function route() {
   clearTimeout(pollTimer);
+  document.body.dataset.route = /^#\/(me|join)\//.test(location.hash) ? "inner" : "home";
   document.title = "Secret Santa ✨ a cozy little holiday ritual";
   const hash = location.hash;
   if (hash.startsWith("#/me/")) return renderMe(hash);
