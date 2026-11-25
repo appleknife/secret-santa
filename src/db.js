@@ -335,7 +335,6 @@ export function demoBackend(storage, now = () => new Date()) {
       const m = await me(db, token);
       const ev = eventOf(db, m);
       if (ev.owner_id !== m.id) fail("Only the person who started the group can choose co-hosts.");
-      if (id === m.id) fail("You're already the host.");
       const p = db.participants.find((x) => x.id === id && x.event_id === ev.id);
       if (p) p.is_host = Boolean(value);
       if (!value) db.backups = db.backups.filter((x) => x.host_id !== id);

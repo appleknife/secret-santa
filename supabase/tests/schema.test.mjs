@@ -275,3 +275,14 @@ test("co-hosts: only the starter picks them; they approve links and receive seal
   await rpc("santa_set_host", { p_token: ot, p_participant_id: ps[1].id, p_is_host: false });
   assert.equal((await rpc("santa_my_event", { p_token: t[1] })).link_backups, null);
 });
+
+test("the starter can switch link-keeping on for themselves", async () => {
+  const { rpc } = await fresh();
+  const { t } = await group(rpc, 3);
+  const ps = (await rpc("santa_my_event", { p_token: t[0] })).participants;
+  await rpc("santa_set_host", { p_token: t[0], p_participant_id: ps[0].id, p_is_host: true });
+  await rpc("santa_give_backup", { p_token: t[1], p_host_id: ps[0].id, p_sealed: "b".repeat(40) });
+  const me = await rpc("santa_my_event", { p_token: t[0] });
+  assert.equal(me.me.is_cohost, true);
+  assert.equal(me.link_backups.length, 1);
+});

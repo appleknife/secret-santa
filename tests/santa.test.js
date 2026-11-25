@@ -266,3 +266,16 @@ test("co-host Coco gets everyone's working private link once they've opened the 
   // the starter can approve links but does NOT receive anyone's link
   assert.equal((await loadMe(db, secrets[0])).memberLinks, null);
 });
+
+test("the group starter can keep everyone's links themselves", async () => {
+  const { db, secrets } = await fivePals();
+  await drawNames(db, secrets[0]);
+  const ps = (await loadMe(db, secrets[0])).participants;
+  await db.setHost(secrets[0].token, ps[0].id, true);
+  for (const i of [1, 2, 3, 4]) await loadMe(db, secrets[i]);
+  const host = await loadMe(db, secrets[0]);
+  assert.equal(host.me.is_cohost, true);
+  assert.deepEqual(host.memberLinks.map((x) => x.member.name).sort(), ["Kai", "Mia", "Rin", "Sol"]);
+  await db.setHost(secrets[0].token, ps[0].id, false);
+  assert.equal((await loadMe(db, secrets[0])).memberLinks, null);
+});

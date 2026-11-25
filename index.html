@@ -1314,6 +1314,18 @@
       }
       .link-list b, .host-list b { flex: 1; min-width: 0; font-family: var(--display); font-weight: 600; color: var(--pine-dark); }
       .host-list .tag { margin-left: 0; }
+      .self-keep {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border: 1.5px solid var(--gold);
+        border-radius: 12px;
+        background: #fffbee;
+        list-style: none;
+      }
+      .self-keep b { flex: 1; font-family: var(--display); font-weight: 600; color: var(--pine-dark); }
+      [data-self-keep] { margin-bottom: 4px; }
       .chips .cohost { color: var(--pine); font-size: 11px; font-weight: 800; margin-left: 2px; }
       details.fold h4 { margin: 4px 18px 6px; }
       .request-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
@@ -2110,11 +2122,13 @@
 
       <details class="panel fold danger" data-settings hidden>
         <summary>⚙️ Group settings</summary>
-        <h4>Co-hosts</h4>
+        <h4>Keeping everyone's links</h4>
         <p class="small">
-          A co-host can approve new-link requests and gets a copy of everyone's private link, so they can resend one
-          if it's lost. They never see anyone's match unless they open someone's link. Pick someone everyone trusts.
+          Whoever keeps links gets a copy of everyone's private link, so they can resend one if it's lost. They never
+          see anyone's match unless they open someone's link. Co-hosts can also approve new-link requests.
         </p>
+        <div class="host-list" data-self-keep></div>
+        <h4>Co-hosts</h4>
         <ul class="host-list" data-host-list></ul>
         <h4>Delete</h4>
         <p class="small">

@@ -542,9 +542,7 @@ begin
   if v.owner_id is distinct from m.id then
     raise exception 'Only the person who started the group can choose co-hosts.' using errcode = 'P0001';
   end if;
-  if p_participant_id = m.id then
-    raise exception 'You''re already the host.' using errcode = 'P0001';
-  end if;
+  -- (the starter may switch this on for themselves too, to keep everyone's links)
   update santa.participants set is_host = coalesce(p_is_host, false)
    where id = p_participant_id and event_id = v.id;
   if not coalesce(p_is_host, false) then

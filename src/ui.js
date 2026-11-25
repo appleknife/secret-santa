@@ -853,6 +853,22 @@ function fillMemberLinks(frag, state) {
 function fillSettings(frag, state, secret, fragment) {
   const box = $("[data-settings]", frag);
   box.hidden = false;
+  // the starter can keep everyone's links themselves
+  const mine = state.me;
+  const keep = el("button", { type: "button", class: mine.is_cohost ? "secondary small" : "small" },
+    mine.is_cohost ? "Turn off" : "Keep everyone's links");
+  keep.addEventListener("click", async () => {
+    try {
+      await busy(keep, "Saving…", () => db.setHost(secret.token, mine.id, !mine.is_cohost));
+      renderMe(fragment, { quiet: true });
+    } catch (err) {
+      setStatus($("[data-delete-status]", box), err.message, true);
+    }
+  });
+  $("[data-self-keep]", box).append(el("li", { class: "self-keep" },
+    el("b", {}, mine.is_cohost ? "You're keeping everyone's links" : "You"),
+    mine.is_cohost ? el("span", { class: "tag" }, "on") : "", keep));
+
   const hosts = $("[data-host-list]", box);
   for (const p of state.participants.filter((x) => x.id !== state.me.id)) {
     const b = el("button", { type: "button", class: "secondary small" },
