@@ -177,3 +177,68 @@ test("gifts sent to an old link explain themselves", async () => {
   assert.equal(k.received[0].gift.locked, true);
   assert.match(k.received[0].gift.message, /old private link/);
 });
+
+test("splitRecovered: forced, free and impossible cases", async () => {
+  const { splitRecovered } = await import("../src/santa.js");
+  // one lost link: the single untaken person
+  assert.deepEqual([...splitRecovered(["x"], ["t"])], [["x", "t"]]);
+  // two lost links that had each other: forced swap
+  assert.deepEqual(Object.fromEntries(splitRecovered(["y", "x"], ["x", "y"])), { x: "y", y: "x" });
+  // one of them is untaken: forced
+  assert.deepEqual(Object.fromEntries(splitRecovered(["x", "y"], ["y", "t"])), { x: "y", y: "t" });
+  // free choice: always the same answer whatever order things arrive in
+  const a = Object.fromEntries(splitRecovered(["x", "y"], ["s", "t"]));
+  const b = Object.fromEntries(splitRecovered(["y", "x"], ["t", "s"]));
+  assert.deepEqual(a, b);
+  assert.equal(splitRecovered(["x"], ["x"]), null);
+  assert.equal(splitRecovered(["x", "y"], ["s"]), null);
+});
+
+test("two friends lose their links at once (40 random draws): everyone ends up with a valid match", async () => {
+  const { requestNewLink } = await import("../src/santa.js");
+  let forced = 0, free = 0;
+  for (let run = 0; run < 40; run++) {
+    const { db, secrets, code, names } = await fivePals();
+    await drawNames(db, secrets[0]);
+    const before = {};
+    for (let i = 0; i < 5; i++) before[names[i]] = (await loadMe(db, secrets[i])).match.name;
+
+    // Kai and Rin (2, 3) both lose their links; Don approves both
+    const lost = [2, 3];
+    const fresh = {};
+    for (const i of lost) fresh[i] = parsePrivateFragment((await requestNewLink(db, code, names[i])).fragment);
+    const ps = (await loadMe(db, secrets[0])).participants;
+    for (const i of lost) await db.approveNewLink(secrets[0].token, ps[i].id, true);
+
+    // everyone opens the app in a random order, a few times over
+    const order = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5);
+    for (let round = 0; round < 2; round++) {
+      for (const i of order) await loadMe(db, lost.includes(i) ? fresh[i] : secrets[i]);
+    }
+
+    const after = {};
+    for (let i = 0; i < 5; i++) {
+      const m = await loadMe(db, lost.includes(i) ? fresh[i] : secrets[i]);
+      assert.ok(m.match && m.match.name, `run ${run}: ${names[i]} has a match`);
+      assert.equal(m.recovery, null);
+      after[names[i]] = m.match.name;
+    }
+    // the three who kept their links are untouched
+    for (const i of [0, 1, 4]) assert.equal(after[names[i]], before[names[i]]);
+    // still a proper Secret Santa: nobody draws themselves, everyone receives once
+    for (const n of names) assert.notEqual(after[n], n);
+    assert.deepEqual(Object.values(after).sort(), [...names].sort());
+    // if only one split was possible, they got exactly their original targets
+    const pool = [before.Kai, before.Rin];
+    const onlyOne = pool.includes("Kai") || pool.includes("Rin");
+    if (onlyOne) {
+      forced++;
+      assert.equal(after.Kai, before.Kai);
+      assert.equal(after.Rin, before.Rin);
+    } else {
+      free++;
+      assert.deepEqual([after.Kai, after.Rin].sort(), pool.sort());
+    }
+  }
+  assert.ok(forced > 0 && free > 0, `covered both cases (forced ${forced}, free ${free})`);
+});

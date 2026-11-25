@@ -477,7 +477,37 @@ async function renderMe(fragment, { quiet = false } = {}) {
         pollTimer = setTimeout(() => renderMe(fragment, { quiet: true }), 20000);
       }
     }, 15000);
+  } else {
+    watchForHelpers(fragment, secret, state);
   }
+}
+
+/**
+ * After the draw, an open page keeps an eye out (cheaply) for friends who lost
+ * their link, and helps them straight away instead of waiting for a refresh.
+ * The group starter's page also picks up new link requests by itself.
+ */
+function watchForHelpers(fragment, secret, shown) {
+  const pendingKey = (st) => st.participants.filter((p) => p.pending).map((p) => p.id).join(",");
+  const shownPending = pendingKey(shown);
+  pollTimer = setTimeout(async () => {
+    if (location.hash !== fragment) return;
+    if (document.hidden) return watchForHelpers(fragment, secret, shown);
+    try {
+      const st = await db.myEvent(secret.token);
+      const needsHelp = st.participants.some(
+        (p) => p.recovering && p.id !== st.me.id && !st.votes_cast.includes(p.id)
+      );
+      if (needsHelp) await loadMe(db, secret); // casts the sealed helper votes
+      if (location.hash !== fragment) return;
+      if (pendingKey(st) !== shownPending && !view.contains(document.activeElement)) {
+        return renderMe(fragment, { quiet: true });
+      }
+      watchForHelpers(fragment, secret, shown); // keep comparing against what's on screen
+    } catch {
+      watchForHelpers(fragment, secret, shown);
+    }
+  }, 12000);
 }
 
 function fillLobby(frag, state, secret, fragment) {

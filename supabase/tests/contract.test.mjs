@@ -93,3 +93,34 @@ test("lost-link recovery through the Supabase client and the real SQL", async ()
   assert.equal(k.match.name, kaiTarget);
   assert.equal(k.recovery, null);
 });
+
+test("two lost links at once through the Supabase client and the real SQL", async () => {
+  for (let run = 0; run < 6; run++) {
+    const names = ["appleknife", "coco", "sho", "deli", "yumeko"];
+    const made = await S.createGroup(api, { title: `Pals ${run}`, giftDay: "", name: names[0], wishlist: "", giftPref: "either" });
+    const secrets = [parsePrivateFragment(made.fragment)];
+    for (const n of names.slice(1)) {
+      secrets.push(parsePrivateFragment((await S.joinGroup(api, made.code, { name: n, wishlist: "", giftPref: "either" })).fragment));
+    }
+    await S.drawNames(api, secrets[0]);
+    const before = [];
+    for (const s of secrets) before.push((await S.loadMe(api, s)).match.name);
+
+    for (const i of [2, 3]) secrets[i] = parsePrivateFragment((await S.requestNewLink(api, made.code, names[i])).fragment);
+    const ps = (await S.loadMe(api, secrets[0])).participants;
+    for (const i of [2, 3]) await api.approveNewLink(secrets[0].token, ps[i].id, true);
+    const sho = await api.myEvent(secrets[2].token);
+    assert.equal(sho.recovery.needed, 3, "only the three who kept their links are needed");
+
+    for (const i of [4, 2, 1, 3, 0, 2, 3]) await S.loadMe(api, secrets[i]);
+    const after = [];
+    for (const s of secrets) {
+      const m = await S.loadMe(api, s);
+      assert.ok(m.match && m.match.name);
+      after.push(m.match.name);
+    }
+    for (const i of [0, 1, 4]) assert.equal(after[i], before[i]);
+    after.forEach((t, i) => assert.notEqual(t, names[i]));
+    assert.deepEqual([...after].sort(), [...names].sort());
+  }
+});

@@ -173,7 +173,7 @@ export function demoBackend(storage, now = () => new Date()) {
           pending: ev.owner_id === m.id ? Boolean(p.pending_token_hash) : false })),
         votes_cast: db.votes.filter((x) => x.voter_id === m.id).map((x) => x.for_id),
         recovery: m.recovering ? {
-          needed: db.participants.filter((p) => p.event_id === ev.id).length - 1,
+          needed: db.participants.filter((p) => p.event_id === ev.id && p.id !== m.id && !p.recovering).length,
           votes: db.votes.filter((x) => x.for_id === m.id).map((x) => x.sealed),
         } : null,
         assignment: a ? a.sealed : null,
@@ -323,7 +323,7 @@ export function demoBackend(storage, now = () => new Date()) {
       const db = load();
       const m = await me(db, token);
       if (!m.recovering) fail("Your match isn't missing.");
-      const need = db.participants.filter((p) => p.event_id === m.event_id).length - 1;
+      const need = db.participants.filter((p) => p.event_id === m.event_id && p.id !== m.id && !p.recovering).length;
       if (db.votes.filter((x) => x.for_id === m.id).length < need) fail("Still waiting for everyone to open the app.");
       db.assignments = db.assignments.filter((x) => x.giver_id !== m.id);
       db.assignments.push({ event_id: m.event_id, giver_id: m.id, sealed });

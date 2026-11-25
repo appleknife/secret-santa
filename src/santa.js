@@ -70,10 +70,13 @@ export async function loadMe(db, secret, opts = {}) {
       for (const v of votes) {
         try { taken.add(JSON.parse(await open(v, secret.privateKey)).receiver_id); } catch { /* skip bad vote */ }
       }
-      const left = state.participants.filter((p) => p.id !== state.me.id && !taken.has(p.id));
-      if (taken.size === needed && left.length === 1) {
+      const recovering = state.participants.filter((p) => p.recovering).map((p) => p.id);
+      const untaken = state.participants.filter((p) => !taken.has(p.id)).map((p) => p.id);
+      const split = taken.size === votes.length ? splitRecovered(recovering, untaken) : null;
+      const target = split && byId.get(split.get(state.me.id));
+      if (target) {
         const mine = byId.get(state.me.id).public_key;
-        const payload = JSON.stringify({ receiver_id: left[0].id, receiver_name: left[0].name });
+        const payload = JSON.stringify({ receiver_id: target.id, receiver_name: target.name });
         await db.restoreMatch(secret.token, await seal(payload, mine));
         return loadMe(db, secret, { restored: true });
       }
@@ -96,6 +99,40 @@ export async function loadMe(db, secret, opts = {}) {
 
   const sent = state.gifts_sent.map((g) => ({ ...g, recipient: byId.get(g.recipient_id) }));
   return { ...state, match, received, sent, recovery };
+}
+
+/**
+ * Who should each recovering person buy for?
+ *
+ * `untaken` is everyone nobody else is buying for: exactly the targets of the
+ * people who lost their links. With one lost link that's a single person. With
+ * several, any pairing where nobody gets themselves is as good as the original
+ * (none of them knew their target), so every recovering browser picks the
+ * *same* one: the first valid pairing in id order. Often only one is valid,
+ * and then it is exactly the original.
+ *
+ * Returns Map(recoveringId -> targetId), or null if it can't be done.
+ */
+export function splitRecovered(recoveringIds, untakenIds) {
+  const R = [...recoveringIds].sort();
+  const U = [...untakenIds].sort();
+  if (R.length === 0 || R.length !== U.length) return null;
+  const used = new Array(U.length).fill(false);
+  const pick = [];
+  const search = (i) => {
+    if (i === R.length) return true;
+    for (let j = 0; j < U.length; j++) {
+      if (used[j] || U[j] === R[i]) continue;
+      used[j] = true;
+      pick.push(U[j]);
+      if (search(i + 1)) return true;
+      used[j] = false;
+      pick.pop();
+    }
+    return false;
+  };
+  if (!search(0)) return null;
+  return new Map(R.map((r, i) => [r, pick[i]]));
 }
 
 /** Lost your link? Make a new one here; the group starter approves it. */

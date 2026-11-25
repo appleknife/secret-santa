@@ -234,7 +234,9 @@ begin
     'votes_cast', coalesce((select jsonb_agg(mv.for_id) from santa.match_votes mv
                             where mv.voter_id = m.id), '[]'::jsonb),
     'recovery', case when m.recovering then jsonb_build_object(
-        'needed', (select count(*) - 1 from santa.participants where event_id = v.id),
+        -- everyone who still knows their own match can help
+        'needed', (select count(*) from santa.participants
+                   where event_id = v.id and id <> m.id and not recovering),
         'votes', coalesce((select jsonb_agg(mv.sealed) from santa.match_votes mv
                            where mv.for_id = m.id), '[]'::jsonb)) end,
     'assignment', (select a.sealed from santa.assignments a
@@ -486,7 +488,8 @@ begin
   if not m.recovering then
     raise exception 'Your match isn''t missing.' using errcode = 'P0001';
   end if;
-  select count(*) - 1 into v_need from santa.participants where event_id = m.event_id;
+  select count(*) into v_need from santa.participants
+   where event_id = m.event_id and id <> m.id and not recovering;
   select count(*) into v_have from santa.match_votes where for_id = m.id;
   if v_have < v_need then
     raise exception 'Still waiting for everyone to open the app.' using errcode = 'P0001';
