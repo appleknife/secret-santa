@@ -62,6 +62,8 @@ export function supabaseBackend(url, key) {
       rpc("santa_approve_new_link", { p_token: token, p_participant_id: id, p_approve: approve }),
     castVote: (token, forId, sealed) => rpc("santa_cast_vote", { p_token: token, p_for_id: forId, p_sealed: sealed }),
     restoreMatch: (token, sealed) => rpc("santa_restore_match", { p_token: token, p_sealed: sealed }),
+    setHost: (token, id, isHost) => rpc("santa_set_host", { p_token: token, p_participant_id: id, p_is_host: isHost }),
+    giveBackup: (token, hostId, sealed) => rpc("santa_give_backup", { p_token: token, p_host_id: hostId, p_sealed: sealed }),
   };
 }
 
@@ -94,7 +96,7 @@ function checkName(name) {
 export function demoBackend(storage, now = () => new Date()) {
   const KEY = "secret-santa-demo-v1";
   const load = () => {
-    const empty = { events: [], participants: [], assignments: [], gifts: [], votes: [] };
+    const empty = { events: [], participants: [], assignments: [], gifts: [], votes: [], backups: [] };
     try { return { ...empty, ...(JSON.parse(storage.getItem(KEY)) || {}) }; }
     catch { return empty; }
   };
@@ -106,6 +108,7 @@ export function demoBackend(storage, now = () => new Date()) {
     return db.participants.find((p) => p.token_hash === h) || fail("That private link is not valid.");
   }
   const eventOf = (db, p) => db.events.find((e) => e.id === p.event_id);
+  const isHost = (db, p) => Boolean(p.is_host) || eventOf(db, p).owner_id === p.id;
   const giftsOpen = (ev) => !ev.gift_day ||
     now().getTime() >= Date.parse(`${ev.gift_day}T00:00:00Z`) - GIFT_EARLY_HOURS * 3600e3;
 
@@ -165,13 +168,19 @@ export function demoBackend(storage, now = () => new Date()) {
         event: { code: ev.code, title: ev.title, gift_day: ev.gift_day, cap_usd: ev.cap_usd,
                  status: ev.status, drawn_at: ev.drawn_at, gifts_open: open },
         me: { id: m.id, name: m.name, wishlist: m.wishlist, gift_pref: m.gift_pref, is_owner: ev.owner_id === m.id,
-              recovering: Boolean(m.recovering) },
+              is_host: isHost(db, m), is_cohost: Boolean(m.is_host), recovering: Boolean(m.recovering) },
         participants: db.participants.filter((p) => p.event_id === ev.id).map((p) => ({
           id: p.id, name: p.name, wishlist: p.wishlist, gift_pref: p.gift_pref,
           public_key: p.public_key, is_owner: ev.owner_id === p.id,
           recovering: Boolean(p.recovering),
-          pending: ev.owner_id === m.id ? Boolean(p.pending_token_hash) : false })),
+          is_host: isHost(db, p),
+          is_cohost: Boolean(p.is_host),
+          pending: isHost(db, m) ? Boolean(p.pending_token_hash) : false })),
         votes_cast: db.votes.filter((x) => x.voter_id === m.id).map((x) => x.for_id),
+        backups_given: db.backups.filter((x) => x.member_id === m.id).map((x) => x.host_id),
+        link_backups: m.is_host
+          ? db.backups.filter((x) => x.host_id === m.id).map((x) => ({ member_id: x.member_id, sealed: x.sealed }))
+          : null,
         recovery: m.recovering ? {
           needed: db.participants.filter((p) => p.event_id === ev.id && p.id !== m.id && !p.recovering).length,
           votes: db.votes.filter((x) => x.for_id === m.id).map((x) => x.sealed),
@@ -271,8 +280,8 @@ export function demoBackend(storage, now = () => new Date()) {
       const name = String(a.name || "").trim().toLowerCase();
       const p = db.participants.find((x) => x.event_id === ev.id && x.name.toLowerCase() === name) ||
         fail("Nobody in this group has that name.");
-      if (p.id === ev.owner_id) {
-        fail("The person who started the group can't get a new link this way, because nobody else can approve it.");
+      if (!db.participants.some((h) => h.event_id === ev.id && h.id !== p.id && isHost(db, h))) {
+        fail("Nobody else in the group can approve a new link for you. Make someone a co-host first.");
       }
       p.pending_key = a.publicKey;
       p.pending_token_hash = await sha256(a.token);
@@ -293,7 +302,8 @@ export function demoBackend(storage, now = () => new Date()) {
       const db = load();
       const m = await me(db, token);
       const ev = eventOf(db, m);
-      if (ev.owner_id !== m.id) fail("Only the person who started the group can approve new links.");
+      if (!isHost(db, m)) fail("Only a host can approve new links.");
+      if (id === m.id) fail("Someone else has to approve your own new link.");
       const p = db.participants.find((x) => x.id === id && x.event_id === ev.id);
       if (!p || !p.pending_token_hash) fail("That request isn't there anymore.");
       if (approve) {
@@ -302,6 +312,7 @@ export function demoBackend(storage, now = () => new Date()) {
         p.recovering = ev.status === "drawn";
         db.assignments = db.assignments.filter((x) => x.giver_id !== p.id);
         db.votes = db.votes.filter((x) => x.for_id !== p.id);
+        db.backups = db.backups.filter((x) => x.member_id !== p.id && x.host_id !== p.id);
       }
       p.pending_key = null;
       p.pending_token_hash = null;
@@ -317,6 +328,27 @@ export function demoBackend(storage, now = () => new Date()) {
       }
       db.votes = db.votes.filter((x) => !(x.for_id === forId && x.voter_id === m.id));
       db.votes.push({ for_id: forId, voter_id: m.id, sealed });
+      save(db);
+    },
+    async setHost(token, id, value) {
+      const db = load();
+      const m = await me(db, token);
+      const ev = eventOf(db, m);
+      if (ev.owner_id !== m.id) fail("Only the person who started the group can choose co-hosts.");
+      if (id === m.id) fail("You're already the host.");
+      const p = db.participants.find((x) => x.id === id && x.event_id === ev.id);
+      if (p) p.is_host = Boolean(value);
+      if (!value) db.backups = db.backups.filter((x) => x.host_id !== id);
+      save(db);
+    },
+    async giveBackup(token, hostId, sealed) {
+      const db = load();
+      const m = await me(db, token);
+      const h = db.participants.find((x) => x.id === hostId && x.event_id === m.event_id);
+      if (!h || !h.is_host || h.id === m.id) fail("That person isn't a co-host.");
+      if (String(sealed || "").length < 20) fail("Bad backup.");
+      db.backups = db.backups.filter((x) => !(x.host_id === hostId && x.member_id === m.id));
+      db.backups.push({ host_id: hostId, member_id: m.id, sealed });
       save(db);
     },
     async restoreMatch(token, sealed) {

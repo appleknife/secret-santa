@@ -176,6 +176,12 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 
+/** True while someone is typing in a box on the page (so don't redraw under them). */
+function isTyping() {
+  const a = document.activeElement;
+  return Boolean(a && view.contains(a) && a.matches("input:not([readonly]), textarea, select"));
+}
+
 function setStatus(node, text, isError = false) {
   if (!node) return;
   node.textContent = text || "";
@@ -447,10 +453,9 @@ async function renderMe(fragment, { quiet = false } = {}) {
   else fillDrawn(frag, state, secret, fragment);
   fillWishEditor(frag, state, secret);
 
-  if (me.is_owner) {
-    fillSettings(frag, state, secret, fragment);
-    fillRequests(frag, state, secret, fragment);
-  }
+  if (me.is_owner) fillSettings(frag, state, secret, fragment);
+  if (me.is_host) fillRequests(frag, state, secret, fragment);
+  if (me.is_cohost) fillMemberLinks(frag, state);
   $("[data-refresh]", frag).addEventListener("click", () => renderMe(fragment));
   $("[data-forget]", frag).addEventListener("click", (e) => {
     const b = e.currentTarget;
@@ -463,15 +468,22 @@ async function renderMe(fragment, { quiet = false } = {}) {
     }
   });
 
-  // keep scroll position on quiet refreshes
+  // keep scroll position and open panels on quiet refreshes
   const y = window.scrollY;
+  if (quiet) {
+    for (const d of $$("details[open]", view)) {
+      const key = Object.keys(d.dataset)[0];
+      const twin = key && frag.querySelector(`details[data-${key.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase())}]`);
+      if (twin) twin.open = true;
+    }
+  }
   view.replaceChildren(frag);
   if (quiet) window.scrollTo(0, y);
 
   clearTimeout(pollTimer);
   if (event.status === "open" || me.recovering) {
     pollTimer = setTimeout(() => {
-      if (location.hash === fragment && !document.hidden && !view.contains(document.activeElement)) {
+      if (location.hash === fragment && !document.hidden && !isTyping()) {
         renderMe(fragment, { quiet: true });
       } else if (location.hash === fragment) {
         pollTimer = setTimeout(() => renderMe(fragment, { quiet: true }), 20000);
@@ -496,11 +508,13 @@ function watchForHelpers(fragment, secret, shown) {
     try {
       const st = await db.myEvent(secret.token);
       const needsHelp = st.participants.some(
-        (p) => p.recovering && p.id !== st.me.id && !st.votes_cast.includes(p.id)
+        (p) => (p.recovering && p.id !== st.me.id && !st.votes_cast.includes(p.id)) ||
+               (p.is_cohost && p.id !== st.me.id && !(st.backups_given || []).includes(p.id))
       );
-      if (needsHelp) await loadMe(db, secret); // casts the sealed helper votes
+      if (needsHelp) await loadMe(db, secret); // casts helper votes / leaves link backups
       if (location.hash !== fragment) return;
-      if (pendingKey(st) !== shownPending && !view.contains(document.activeElement)) {
+      const moreLinks = Array.isArray(st.link_backups) && st.link_backups.length !== (shown.link_backups || []).length;
+      if ((pendingKey(st) !== shownPending || moreLinks) && !isTyping()) {
         return renderMe(fragment, { quiet: true });
       }
       watchForHelpers(fragment, secret, shown); // keep comparing against what's on screen
@@ -523,6 +537,7 @@ function fillLobby(frag, state, secret, fragment) {
   for (const p of participants) {
     const chip = el("li", { class: p.id === me.id ? "you" : "" }, p.name);
     if (p.is_owner) chip.append(el("span", { class: "star", title: "Started the group" }, " ★"));
+    else if (p.is_cohost) chip.append(el("span", { class: "cohost", title: "Co-host" }, "co-host"));
     if (me.is_owner && p.id !== me.id) {
       const x = el("button", { type: "button", class: "chip-x", "aria-label": `Remove ${p.name}` }, "✕");
       x.addEventListener("click", async () => {
@@ -816,9 +831,45 @@ function fillRequests(frag, state, secret, fragment) {
   }
 }
 
+function fillMemberLinks(frag, state) {
+  const box = $("[data-links]", frag);
+  box.hidden = false;
+  const list = $("[data-link-list]", box);
+  const have = new Set();
+  for (const { member, link } of state.memberLinks || []) {
+    have.add(member.id);
+    const c = el("button", { type: "button", class: "small" }, "Copy link");
+    c.addEventListener("click", () => copy(privateLink(link), c));
+    list.append(el("li", {}, el("b", {}, member.name), c));
+  }
+  const missing = state.participants.filter((p) => p.id !== state.me.id && !have.has(p.id)).map((p) => p.name);
+  if (missing.length) {
+    const w = $("[data-links-waiting]", box);
+    w.hidden = false;
+    w.textContent = `Waiting for ${missing.join(", ")} to open the app once. Their link shows up here after that.`;
+  }
+}
+
 function fillSettings(frag, state, secret, fragment) {
   const box = $("[data-settings]", frag);
   box.hidden = false;
+  const hosts = $("[data-host-list]", box);
+  for (const p of state.participants.filter((x) => x.id !== state.me.id)) {
+    const b = el("button", { type: "button", class: "secondary small" },
+      p.is_cohost ? "Remove co-host" : "Make co-host");
+    b.addEventListener("click", async () => {
+      try {
+        await busy(b, "Saving…", () => db.setHost(secret.token, p.id, !p.is_cohost));
+        renderMe(fragment, { quiet: true });
+      } catch (err) {
+        setStatus($("[data-delete-status]", box), err.message, true);
+      }
+    });
+    const li = el("li", {}, el("b", {}, p.name));
+    if (p.is_cohost) li.append(el("span", { class: "tag" }, "co-host"));
+    li.append(b);
+    hosts.append(li);
+  }
   const button = $("[data-delete]", box);
   const status = $("[data-delete-status]", box);
   button.addEventListener("click", async () => {

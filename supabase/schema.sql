@@ -77,6 +77,17 @@ alter table santa.participants add column if not exists pending_token_hash bytea
 alter table santa.participants add column if not exists pending_at timestamptz;
 alter table santa.participants add column if not exists recovering boolean not null default false;
 
+-- co-hosts: chosen by the group starter; they can approve new links and keep
+-- backups of everyone's private link (sealed to the host's own key).
+alter table santa.participants add column if not exists is_host boolean not null default false;
+
+create table if not exists santa.link_backups (
+  host_id    uuid not null references santa.participants (id) on delete cascade,
+  member_id  uuid not null references santa.participants (id) on delete cascade,
+  sealed     text not null check (char_length(sealed) <= 4000),
+  primary key (host_id, member_id)
+);
+
 create table if not exists santa.match_votes (
   for_id    uuid not null references santa.participants (id) on delete cascade,
   voter_id  uuid not null references santa.participants (id) on delete cascade,
@@ -89,6 +100,7 @@ alter table santa.participants enable row level security;
 alter table santa.assignments  enable row level security;
 alter table santa.gifts        enable row level security;
 alter table santa.match_votes  enable row level security;
+alter table santa.link_backups enable row level security;
 revoke all on all tables in schema santa from public;
 
 -- ───────────────────────────── helpers (not callable from the web) ─────────
@@ -126,6 +138,11 @@ begin
     raise exception 'Bad public key.' using errcode = 'P0001';
   end if;
 end $$;
+
+create or replace function santa.is_host(p santa.participants)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select p.is_host or exists (select 1 from santa.events e where e.id = p.event_id and e.owner_id = p.id)
+$$;
 
 revoke all on all functions in schema santa from public;
 
@@ -223,16 +240,23 @@ begin
                                 'gifts_open', v_open),
     'me', jsonb_build_object('id', m.id, 'name', m.name, 'wishlist', m.wishlist,
                              'gift_pref', m.gift_pref, 'is_owner', v.owner_id = m.id,
-                             'recovering', m.recovering),
+                             'is_host', santa.is_host(m), 'is_cohost', m.is_host, 'recovering', m.recovering),
     'participants', coalesce((select jsonb_agg(jsonb_build_object(
         'id', p.id, 'name', p.name, 'wishlist', p.wishlist, 'gift_pref', p.gift_pref,
         'public_key', p.public_key, 'is_owner', v.owner_id = p.id,
         'recovering', p.recovering,
-        'pending', case when v.owner_id = m.id then p.pending_token_hash is not null else false end)
+        'is_host', p.is_host or v.owner_id = p.id,
+        'is_cohost', p.is_host,
+        'pending', case when santa.is_host(m) then p.pending_token_hash is not null else false end)
         order by p.created_at)
       from santa.participants p where p.event_id = v.id), '[]'::jsonb),
     'votes_cast', coalesce((select jsonb_agg(mv.for_id) from santa.match_votes mv
                             where mv.voter_id = m.id), '[]'::jsonb),
+    'backups_given', coalesce((select jsonb_agg(lb.host_id) from santa.link_backups lb
+                               where lb.member_id = m.id), '[]'::jsonb),
+    'link_backups', case when m.is_host then coalesce((select jsonb_agg(jsonb_build_object(
+        'member_id', lb.member_id, 'sealed', lb.sealed))
+      from santa.link_backups lb where lb.host_id = m.id), '[]'::jsonb) end,
     'recovery', case when m.recovering then jsonb_build_object(
         -- everyone who still knows their own match can help
         'needed', (select count(*) from santa.participants
@@ -404,8 +428,9 @@ begin
   if not found then
     raise exception 'Nobody in this group has that name.' using errcode = 'P0001';
   end if;
-  if p.id = v.owner_id then
-    raise exception 'The person who started the group can''t get a new link this way, because nobody else can approve it.' using errcode = 'P0001';
+  if not exists (select 1 from santa.participants h
+                 where h.event_id = v.id and h.id <> p.id and (h.is_host or h.id = v.owner_id)) then
+    raise exception 'Nobody else in the group can approve a new link for you. Make someone a co-host first.' using errcode = 'P0001';
   end if;
   update santa.participants
      set pending_key = p_public_key, pending_token_hash = santa.hash_token(p_token), pending_at = now()
@@ -437,8 +462,11 @@ declare m santa.participants; v santa.events; p santa.participants;
 begin
   m := santa.me(p_token);
   select * into v from santa.events where id = m.event_id for update;
-  if v.owner_id is distinct from m.id then
-    raise exception 'Only the person who started the group can approve new links.' using errcode = 'P0001';
+  if not santa.is_host(m) then
+    raise exception 'Only a host can approve new links.' using errcode = 'P0001';
+  end if;
+  if p_participant_id = m.id then
+    raise exception 'Someone else has to approve your own new link.' using errcode = 'P0001';
   end if;
   select * into p from santa.participants where id = p_participant_id and event_id = v.id for update;
   if not found or p.pending_token_hash is null then
@@ -455,6 +483,7 @@ begin
    where id = p.id;
   delete from santa.assignments where giver_id = p.id;   -- sealed to the lost key
   delete from santa.match_votes where for_id = p.id;     -- sealed to an older key
+  delete from santa.link_backups where member_id = p.id or host_id = p.id; -- old link / old key
 end $$;
 
 -- Help someone with a new link find their match: send them your own target,
@@ -503,6 +532,45 @@ begin
   delete from santa.match_votes where for_id = m.id;
 end $$;
 
+-- The group starter makes someone a co-host (or not).
+create or replace function public.santa_set_host(p_token text, p_participant_id uuid, p_is_host boolean)
+returns void language plpgsql security definer set search_path = '' as $$
+declare m santa.participants; v santa.events;
+begin
+  m := santa.me(p_token);
+  select * into v from santa.events where id = m.event_id for update;
+  if v.owner_id is distinct from m.id then
+    raise exception 'Only the person who started the group can choose co-hosts.' using errcode = 'P0001';
+  end if;
+  if p_participant_id = m.id then
+    raise exception 'You''re already the host.' using errcode = 'P0001';
+  end if;
+  update santa.participants set is_host = coalesce(p_is_host, false)
+   where id = p_participant_id and event_id = v.id;
+  if not coalesce(p_is_host, false) then
+    delete from santa.link_backups where host_id = p_participant_id;
+  end if;
+end $$;
+
+-- Each member's browser leaves a copy of their own link for each co-host,
+-- sealed to that co-host's public key. The starter can approve new links
+-- but only co-hosts receive these backups.
+create or replace function public.santa_give_backup(p_token text, p_host_id uuid, p_sealed text)
+returns void language plpgsql security definer set search_path = '' as $$
+declare m santa.participants; h santa.participants;
+begin
+  m := santa.me(p_token);
+  select * into h from santa.participants where id = p_host_id and event_id = m.event_id;
+  if not found or not h.is_host or h.id = m.id then
+    raise exception 'That person isn''t a co-host.' using errcode = 'P0001';
+  end if;
+  if char_length(coalesce(p_sealed, '')) not between 20 and 4000 then
+    raise exception 'Bad backup.' using errcode = 'P0001';
+  end if;
+  insert into santa.link_backups (host_id, member_id, sealed) values (h.id, m.id, p_sealed)
+    on conflict (host_id, member_id) do update set sealed = excluded.sealed;
+end $$;
+
 -- lock every function down, then open exactly the API to the website roles
 do $$
 declare f text;
@@ -523,7 +591,9 @@ begin
     'santa_link_status(text)',
     'santa_approve_new_link(text,uuid,boolean)',
     'santa_cast_vote(text,uuid,text)',
-    'santa_restore_match(text,text)'
+    'santa_restore_match(text,text)',
+    'santa_set_host(text,uuid,boolean)',
+    'santa_give_backup(text,uuid,text)'
   ] loop
     execute format('revoke all on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated', f);

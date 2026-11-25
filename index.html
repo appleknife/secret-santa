@@ -1290,6 +1290,32 @@
         font-family: var(--body);
       }
       select:focus { outline: none; border-color: var(--pine); box-shadow: 0 0 0 4px rgba(47, 107, 82, .14); }
+      .tag {
+        margin-left: 6px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: var(--pine);
+        color: #fbf5e9;
+        font-family: var(--body);
+        font-size: 11px;
+        font-weight: 800;
+        vertical-align: middle;
+      }
+      .small-callout { font-size: 14px; }
+      .link-list, .host-list { margin: 10px 0 12px; padding: 0; list-style: none; display: grid; gap: 8px; }
+      .link-list li, .host-list li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        background: #fffdf8;
+      }
+      .link-list b, .host-list b { flex: 1; min-width: 0; font-family: var(--display); font-weight: 600; color: var(--pine-dark); }
+      .host-list .tag { margin-left: 0; }
+      .chips .cohost { color: var(--pine); font-size: 11px; font-weight: 800; margin-left: 2px; }
+      details.fold h4 { margin: 4px 18px 6px; }
       .request-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
       .request-list li {
         display: flex;
@@ -2072,8 +2098,25 @@
         </p>
       </details>
 
+      <details class="panel fold" data-links hidden>
+        <summary>🔗 Members' links <span class="tag">co-host</span></summary>
+        <p class="callout gold small-callout">
+          Use these only to resend someone a link they lost. <b>Opening someone's link shows you their match</b>,
+          so copy it and send it to them without opening it.
+        </p>
+        <ul class="link-list" data-link-list></ul>
+        <p class="small" data-links-waiting hidden></p>
+      </details>
+
       <details class="panel fold danger" data-settings hidden>
         <summary>⚙️ Group settings</summary>
+        <h4>Co-hosts</h4>
+        <p class="small">
+          A co-host can approve new-link requests and gets a copy of everyone's private link, so they can resend one
+          if it's lost. They never see anyone's match unless they open someone's link. Pick someone everyone trusts.
+        </p>
+        <ul class="host-list" data-host-list></ul>
+        <h4>Delete</h4>
         <p class="small">
           Only you see this, because you started the group. Deleting removes everyone, the drawn names and all
           gifts for good. Handy for clearing out test groups, or starting over if something went wrong.

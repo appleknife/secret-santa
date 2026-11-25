@@ -61,6 +61,30 @@ export async function loadMe(db, secret, opts = {}) {
     }
   }
 
+  // Leave each co-host a copy of our private link, sealed so only they can open it.
+  const myLink = privateFragment(secret.token, secret.privateKey);
+  for (const h of state.participants) {
+    if (!h.is_cohost || h.id === state.me.id || (state.backups_given || []).includes(h.id)) continue;
+    try {
+      await db.giveBackup(secret.token, h.id, await seal(JSON.stringify({ link: myLink }), h.public_key));
+    } catch {
+      /* not critical; we'll try again next visit */
+    }
+  }
+
+  // Co-hosts: open the backups people left for us. (Only links, never matches.)
+  let memberLinks = null;
+  if (state.me.is_cohost && Array.isArray(state.link_backups)) {
+    memberLinks = [];
+    for (const b of state.link_backups) {
+      try {
+        const link = JSON.parse(await open(b.sealed, secret.privateKey)).link;
+        if (/^#\/me\/[A-Za-z0-9_.-]+$/.test(link)) memberLinks.push({ member: byId.get(b.member_id), link });
+      } catch { /* skip */ }
+    }
+    memberLinks = memberLinks.filter((x) => x.member);
+  }
+
   let recovery = null;
   if (state.me.recovering && state.recovery) {
     const { needed, votes } = state.recovery;
@@ -98,7 +122,7 @@ export async function loadMe(db, secret, opts = {}) {
   }
 
   const sent = state.gifts_sent.map((g) => ({ ...g, recipient: byId.get(g.recipient_id) }));
-  return { ...state, match, received, sent, recovery };
+  return { ...state, match, received, sent, recovery, memberLinks };
 }
 
 /**

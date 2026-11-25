@@ -242,3 +242,27 @@ test("two friends lose their links at once (40 random draws): everyone ends up w
   }
   assert.ok(forced > 0 && free > 0, `covered both cases (forced ${forced}, free ${free})`);
 });
+
+test("co-host Coco gets everyone's working private link once they've opened the app", async () => {
+  const { db, secrets, names } = await fivePals();
+  await drawNames(db, secrets[0]);
+  const ps = (await loadMe(db, secrets[0])).participants;
+  await assert.rejects(() => db.setHost(secrets[2].token, ps[1].id, true), /Only the person/);
+  await db.setHost(secrets[0].token, ps[1].id, true); // Mia (index 1) plays Coco
+
+  let coco = await loadMe(db, secrets[1]);
+  assert.equal(coco.me.is_host, true);
+  assert.equal(coco.memberLinks.length, 0, "nobody has opened the app since");
+  assert.equal((await loadMe(db, secrets[2])).memberLinks, null, "non-hosts never get links");
+
+  for (const i of [0, 2, 3, 4]) await loadMe(db, secrets[i]);
+  coco = await loadMe(db, secrets[1]);
+  assert.deepEqual(coco.memberLinks.map((x) => x.member.name).sort(), ["Don", "Kai", "Rin", "Sol"]);
+  for (const { member, link } of coco.memberLinks) {
+    const opened = await loadMe(db, parsePrivateFragment(link));
+    assert.equal(opened.me.name, member.name, "the copied link really opens that person's page");
+    assert.ok(!JSON.stringify(member).includes("receiver"), "the list itself carries no match info");
+  }
+  // the starter can approve links but does NOT receive anyone's link
+  assert.equal((await loadMe(db, secrets[0])).memberLinks, null);
+});

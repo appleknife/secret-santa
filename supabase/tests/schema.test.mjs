@@ -178,7 +178,7 @@ test("lost link: request, owner approves, others vote, match restored", async ()
   const newTok = tok();
   const newKey = key();
   await assert.rejects(() => rpc("santa_request_new_link", { p_code: code, p_name: "nobody", p_public_key: newKey, p_token: newTok }), /Nobody in this group/);
-  await assert.rejects(() => rpc("santa_request_new_link", { p_code: code, p_name: "P0", p_public_key: newKey, p_token: newTok }), /started the group/);
+  await assert.rejects(() => rpc("santa_request_new_link", { p_code: code, p_name: "P0", p_public_key: newKey, p_token: newTok }), /co-host first/);
   const r = await rpc("santa_request_new_link", { p_code: code, p_name: "p2", p_public_key: newKey, p_token: newTok });
   assert.equal(r.owner_name, "P0");
   assert.equal((await rpc("santa_link_status", { p_token: newTok })).status, "pending");
@@ -189,7 +189,7 @@ test("lost link: request, owner approves, others vote, match restored", async ()
   // only the owner sees the pending flag, only the owner approves
   assert.equal((await rpc("santa_my_event", { p_token: t[0] })).participants[2].pending, true);
   assert.equal((await rpc("santa_my_event", { p_token: t[1] })).participants[2].pending, false);
-  await assert.rejects(() => rpc("santa_approve_new_link", { p_token: t[1], p_participant_id: ps[2].id, p_approve: true }), /Only the person/);
+  await assert.rejects(() => rpc("santa_approve_new_link", { p_token: t[1], p_participant_id: ps[2].id, p_approve: true }), /Only a host/);
   await rpc("santa_approve_new_link", { p_token: t[0], p_participant_id: ps[2].id, p_approve: true });
 
   await assert.rejects(() => rpc("santa_my_event", { p_token: t[2] }), /not valid/, "old link stops working");
@@ -232,4 +232,46 @@ test("lost link before the draw just swaps the key; decline clears the request",
   await rpc("santa_approve_new_link", { p_token: t[0], p_participant_id: ps[1].id, p_approve: true });
   const me = await rpc("santa_my_event", { p_token: b });
   assert.equal(me.me.recovering, false);
+});
+
+test("co-hosts: only the starter picks them; they approve links and receive sealed backups", async () => {
+  const { rpc } = await fresh();
+  const { code, t } = await group(rpc, 5);
+  const ps = (await rpc("santa_my_event", { p_token: t[0] })).participants;
+  await assert.rejects(() => rpc("santa_set_host", { p_token: t[2], p_participant_id: ps[1].id, p_is_host: true }), /Only the person/);
+  await rpc("santa_set_host", { p_token: t[0], p_participant_id: ps[1].id, p_is_host: true });
+  const coco = await rpc("santa_my_event", { p_token: t[1] });
+  assert.equal(coco.me.is_host, true);
+  assert.deepEqual(coco.link_backups, []);
+  assert.equal((await rpc("santa_my_event", { p_token: t[2] })).link_backups, null, "non-hosts get nothing");
+  assert.deepEqual(coco.participants.filter((p) => p.is_host).map((p) => p.name), ["P0", "P1"]);
+
+  // backups only go to hosts, and only hosts see the ones meant for them
+  await assert.rejects(() => rpc("santa_give_backup", { p_token: t[3], p_host_id: ps[2].id, p_sealed: "b".repeat(40) }), /isn't a co-host/);
+  for (const i of [0, 2, 3, 4]) await rpc("santa_give_backup", { p_token: t[i], p_host_id: ps[1].id, p_sealed: `for-coco-${i}`.padEnd(40, "b") });
+  await assert.rejects(() => rpc("santa_give_backup", { p_token: t[2], p_host_id: ps[0].id, p_sealed: "for-apple".padEnd(40, "b") }), /isn't a co-host/, "the starter doesn't collect links");
+  const cocoB = (await rpc("santa_my_event", { p_token: t[1] })).link_backups;
+  assert.equal(cocoB.length, 4);
+  assert.ok(cocoB.every((b) => b.sealed.startsWith("for-coco")));
+  assert.equal((await rpc("santa_my_event", { p_token: t[0] })).link_backups, null);
+  assert.deepEqual((await rpc("santa_my_event", { p_token: t[2] })).backups_given, [ps[1].id]);
+
+  // a co-host sees and approves new-link requests; stale backups are cleared
+  const nt = tok();
+  await rpc("santa_request_new_link", { p_code: code, p_name: "P2", p_public_key: key(), p_token: nt });
+  assert.equal((await rpc("santa_my_event", { p_token: t[1] })).participants[2].pending, true);
+  await rpc("santa_approve_new_link", { p_token: t[1], p_participant_id: ps[2].id, p_approve: true });
+  assert.equal((await rpc("santa_my_event", { p_token: t[1] })).link_backups.length, 3, "P2's old link backup is gone");
+  assert.deepEqual((await rpc("santa_my_event", { p_token: nt })).backups_given, []);
+
+  // with a co-host, even the starter can recover a lost link
+  const ot = tok();
+  await rpc("santa_request_new_link", { p_code: code, p_name: "P0", p_public_key: key(), p_token: ot });
+  await assert.rejects(() => rpc("santa_approve_new_link", { p_token: t[0], p_participant_id: ps[0].id, p_approve: true }), /Someone else/);
+  await rpc("santa_approve_new_link", { p_token: t[1], p_participant_id: ps[0].id, p_approve: true });
+  assert.equal((await rpc("santa_my_event", { p_token: ot })).me.is_owner, true);
+
+  // removing a co-host throws away their backups
+  await rpc("santa_set_host", { p_token: ot, p_participant_id: ps[1].id, p_is_host: false });
+  assert.equal((await rpc("santa_my_event", { p_token: t[1] })).link_backups, null);
 });
